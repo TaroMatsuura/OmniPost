@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.history/
+.vscode/
+.idea/
+
+# Data and logs
+logs/
+inbox/
+archive/
+chromedriver-linux64/
+*.csv
+*.jsonl
+
+# OS generated files
+.DS_Store
+Thumbs.db
