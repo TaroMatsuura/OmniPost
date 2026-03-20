@@ -32,6 +32,7 @@ NORMAL_BET_TYPE_MAP = {
     "tan": "tansho",
     "fuku": "fukusho",
     "ren": "umaren",
+    "umaren_box": "umaren",
     "umatan": "umatan",
     "sanpuku": "sanrenpuku",
     "santan": "sanrentan",
@@ -69,7 +70,12 @@ class ExecutionBatch:
 
     @property
     def batch_id(self) -> str:
-        return f"{self.race_id}:{self.ticket_type}"
+        order_ids = ",".join(order.order_id for order in self.orders)
+        return f"{self.race_id}:{self.ticket_type}:{self.formation}:{order_ids}"
+
+    @property
+    def formation(self) -> str:
+        return self.orders[0].formation if self.orders else "SINGLE"
 
     @property
     def race_number(self) -> int:
@@ -167,6 +173,12 @@ class IPATExecutionService:
                 batch_amounts = cohort_plan.get(batch.batch_id, {})
                 effective_total = sum(batch_amounts.values())
                 if effective_total <= 0:
+                    self._warn_purchase_limit_shortage(
+                        batch.orders,
+                        required_amount=cohort_requested,
+                        available_amount=remaining_limit,
+                        simulated=True,
+                    )
                     for order in batch.orders:
                         skipped_amount += order.amount
                         order_results.append(
@@ -174,6 +186,26 @@ class IPATExecutionService:
                                 order_id=order.order_id,
                                 status="skipped",
                                 message=f"simulation: purchase limit shortage: required={cohort_requested} available={remaining_limit}",
+                                amount=order.amount,
+                                race_id=order.race_id,
+                                ticket_type=order.ticket_type,
+                            )
+                        )
+                    continue
+                if remaining_limit is not None and self._requires_full_funding(bankroll_mode) and remaining_limit < effective_total:
+                    self._warn_purchase_limit_shortage(
+                        batch.orders,
+                        required_amount=effective_total,
+                        available_amount=remaining_limit,
+                        simulated=True,
+                    )
+                    for order in batch.orders:
+                        skipped_amount += order.amount
+                        order_results.append(
+                            OrderExecutionResult(
+                                order_id=order.order_id,
+                                status="skipped",
+                                message=f"simulation: purchase limit shortage: required={effective_total} available={remaining_limit}",
                                 amount=order.amount,
                                 race_id=order.race_id,
                                 ticket_type=order.ticket_type,
@@ -245,6 +277,19 @@ class IPATExecutionService:
             if purchase_limit_before is None:
                 purchase_limit_before = current_limit
             purchase_limit_after = current_limit
+            stop_message = self._target_balance_stop_message(current_limit)
+            if stop_message is not None:
+                logger.warning(stop_message)
+                return ExecutionSummary(
+                    status="stopped",
+                    message=stop_message,
+                    executed_amount=executed_amount,
+                    skipped_amount=skipped_amount,
+                    failed_amount=failed_amount,
+                    purchase_limit_before=purchase_limit_before,
+                    purchase_limit_after=purchase_limit_after,
+                    order_results=order_results,
+                )
             cohort_plan, bankroll_mode = self._plan_cohort_amounts(
                 cohort,
                 current_limit,
@@ -273,6 +318,18 @@ class IPATExecutionService:
                 skipped_amount += summary.skipped_amount
                 failed_amount += summary.failed_amount
                 purchase_limit_after = summary.purchase_limit_after or purchase_limit_after
+                if summary.status == "cancelled":
+                    status = "partial" if executed_amount else "skipped"
+                    return ExecutionSummary(
+                        status=status,
+                        message="execution cancelled by manual confirmation",
+                        executed_amount=executed_amount,
+                        skipped_amount=skipped_amount,
+                        failed_amount=failed_amount,
+                        purchase_limit_before=purchase_limit_before,
+                        purchase_limit_after=purchase_limit_after,
+                        order_results=order_results,
+                    )
 
             is_first_cohort = False
 
@@ -306,9 +363,10 @@ class IPATExecutionService:
         resolved_amounts: dict[str, int] | None = None,
         bankroll_mode: str | None = None,
     ) -> ExecutionSummary:
-        grouped: dict[tuple[str, str], list[BetOrder]] = defaultdict(list)
+        grouped: dict[tuple[str, str, str, str], list[BetOrder]] = defaultdict(list)
         for order in sorted(orders, key=lambda item: (item.post_time, item.race_id, item.order_id)):
-            grouped[(order.race_id, order.ticket_type)].append(order)
+            order_group = order.order_id if order.formation != "SINGLE" else "__group__"
+            grouped[(order.race_id, order.ticket_type, order.formation, order_group)].append(order)
 
         order_results: list[OrderExecutionResult] = []
         executed_amount = 0
@@ -324,7 +382,7 @@ class IPATExecutionService:
             driver.login()
             driver.select_normal_bet()
 
-            for (race_id, ticket_type), group_orders in grouped.items():
+            for (race_id, ticket_type, formation, _order_group), group_orders in grouped.items():
                 unsupported_message = self._unsupported_normal_bet_message(ticket_type)
                 if unsupported_message:
                     for order in group_orders:
@@ -362,6 +420,22 @@ class IPATExecutionService:
                 if purchase_limit_before is None:
                     purchase_limit_before = purchase_limit
                 purchase_limit_after = purchase_limit
+                if purchase_limit is None:
+                    message = "purchase limit unavailable"
+                    self._warn_purchase_limit_unavailable(group_orders)
+                    for order in group_orders:
+                        skipped_amount += order.amount
+                        order_results.append(
+                            OrderExecutionResult(
+                                order_id=order.order_id,
+                                status="skipped",
+                                message=message,
+                                amount=order.amount,
+                                race_id=order.race_id,
+                                ticket_type=order.ticket_type,
+                            )
+                        )
+                    continue
                 active_mode = bankroll_mode or "fixed"
                 if resolved_amounts is None:
                     effective_amounts, active_mode = self._resolve_effective_amounts(group_orders, purchase_limit)
@@ -369,49 +443,86 @@ class IPATExecutionService:
                     effective_amounts = {order.order_id: resolved_amounts.get(order.order_id, 0) for order in group_orders}
                 effective_group_total = sum(effective_amounts.values())
                 if purchase_limit is not None and effective_group_total <= 0:
-                    message = f"purchase limit shortage: required={group_total} available={purchase_limit}"
-                    for order in group_orders:
-                        skipped_amount += order.amount
-                        order_results.append(
-                            OrderExecutionResult(
-                                order_id=order.order_id,
-                                status="skipped",
-                                message=message,
-                                amount=order.amount,
-                                race_id=order.race_id,
-                                ticket_type=order.ticket_type,
-                            )
+                    purchase_limit, shortage_message, end_requested = self._wait_for_manual_funding(
+                        driver,
+                        group_orders,
+                        required_amount=group_total,
+                        request_timestamp=request.timestamp,
+                    )
+                    purchase_limit_after = purchase_limit
+                    if end_requested:
+                        return ExecutionSummary(
+                            status="cancelled",
+                            message="execution ended by operator after insufficient funds",
+                            executed_amount=executed_amount,
+                            skipped_amount=skipped_amount,
+                            failed_amount=failed_amount,
+                            purchase_limit_before=purchase_limit_before,
+                            purchase_limit_after=purchase_limit_after,
+                            order_results=order_results,
                         )
-                    continue
-                if purchase_limit is not None and active_mode == "fixed" and purchase_limit < group_total:
-                    message = f"purchase limit shortage: required={group_total} available={purchase_limit}"
-                    for order in group_orders:
-                        skipped_amount += order.amount
-                        order_results.append(
-                            OrderExecutionResult(
-                                order_id=order.order_id,
-                                status="skipped",
-                                message=message,
-                                amount=order.amount,
-                                race_id=order.race_id,
-                                ticket_type=order.ticket_type,
+                    if shortage_message is not None:
+                        for order in group_orders:
+                            skipped_amount += order.amount
+                            order_results.append(
+                                OrderExecutionResult(
+                                    order_id=order.order_id,
+                                    status="skipped",
+                                    message=shortage_message,
+                                    amount=order.amount,
+                                    race_id=order.race_id,
+                                    ticket_type=order.ticket_type,
+                                )
                             )
+                        continue
+                    if resolved_amounts is None:
+                        effective_amounts, active_mode = self._resolve_effective_amounts(group_orders, purchase_limit)
+                    effective_group_total = sum(effective_amounts.values())
+                if purchase_limit is not None and self._requires_full_funding(active_mode) and purchase_limit < group_total:
+                    purchase_limit, shortage_message, end_requested = self._wait_for_manual_funding(
+                        driver,
+                        group_orders,
+                        required_amount=group_total,
+                        request_timestamp=request.timestamp,
+                    )
+                    purchase_limit_after = purchase_limit
+                    if end_requested:
+                        return ExecutionSummary(
+                            status="cancelled",
+                            message="execution ended by operator after insufficient funds",
+                            executed_amount=executed_amount,
+                            skipped_amount=skipped_amount,
+                            failed_amount=failed_amount,
+                            purchase_limit_before=purchase_limit_before,
+                            purchase_limit_after=purchase_limit_after,
+                            order_results=order_results,
                         )
-                    continue
+                    if shortage_message is not None:
+                        for order in group_orders:
+                            skipped_amount += order.amount
+                            order_results.append(
+                                OrderExecutionResult(
+                                    order_id=order.order_id,
+                                    status="skipped",
+                                    message=shortage_message,
+                                    amount=order.amount,
+                                    race_id=order.race_id,
+                                    ticket_type=order.ticket_type,
+                                )
+                            )
+                        continue
+                    if resolved_amounts is None:
+                        effective_amounts, active_mode = self._resolve_effective_amounts(group_orders, purchase_limit)
+                    effective_group_total = sum(effective_amounts.values())
 
                 try:
                     jyo_name, race_num = self._parse_race_id(group_orders[0].race_id)
                     driver.select_course_and_race(jyo_name, race_num, expected_time=group_orders[0].post_time.strftime("%H:%M"))
-                    horse_amount_list = [
-                        (order.horse_number, effective_amounts[order.order_id])
-                        for order in group_orders
-                        if order.horse_number is not None
-                        and effective_amounts.get(order.order_id, 0) > 0
-                    ]
+                    horse_amount_list = self._build_normal_horse_amount_list(group_orders, effective_amounts)
                     success = driver.vote_horses(
                         horse_amount_list,
                         bet_type=NORMAL_BET_TYPE_MAP[ticket_type],
-                        formation="SINGLE",
+                        formation=formation,
                         finalize=True,
                         clear_cart=True,
                         calculated_total=effective_group_total,
@@ -434,6 +545,59 @@ class IPATExecutionService:
                                 )
                             )
                     else:
+                        if driver.confirm_vote and driver.last_vote_cancelled:
+                            skipped_amount += effective_group_total
+                            for order in group_orders:
+                                order_results.append(
+                                    OrderExecutionResult(
+                                        order_id=order.order_id,
+                                        status="skipped",
+                                        message="manual confirmation cancelled",
+                                        amount=effective_amounts.get(order.order_id, 0),
+                                        race_id=order.race_id,
+                                        ticket_type=order.ticket_type,
+                                    )
+                                )
+                            return ExecutionSummary(
+                                status="cancelled",
+                                message="manual confirmation cancelled",
+                                executed_amount=executed_amount,
+                                skipped_amount=skipped_amount,
+                                failed_amount=failed_amount,
+                                purchase_limit_before=purchase_limit_before,
+                                purchase_limit_after=purchase_limit_after,
+                                order_results=order_results,
+                            )
+                        if driver.last_vote_status == "operator_ended":
+                            return ExecutionSummary(
+                                status="cancelled",
+                                message=driver.last_vote_message or "execution ended by operator after insufficient funds",
+                                executed_amount=executed_amount,
+                                skipped_amount=skipped_amount,
+                                failed_amount=failed_amount,
+                                purchase_limit_before=purchase_limit_before,
+                                purchase_limit_after=purchase_limit_after,
+                                order_results=order_results,
+                            )
+                        if driver.last_vote_status in {"skipped", "cutoff"}:
+                            skipped_amount += effective_group_total
+                            message = driver.last_vote_message or "driver skipped vote"
+                            for order in group_orders:
+                                order_results.append(
+                                    OrderExecutionResult(
+                                        order_id=order.order_id,
+                                        status="skipped",
+                                        message=message,
+                                        amount=effective_amounts.get(order.order_id, 0),
+                                        race_id=order.race_id,
+                                        ticket_type=order.ticket_type,
+                                    )
+                                )
+                            driver.handle_continue_voting()
+                            refreshed_limit = driver.get_purchase_limit()
+                            if refreshed_limit is not None:
+                                purchase_limit_after = refreshed_limit
+                            continue
                         failed_amount += effective_group_total
                         for order in group_orders:
                             order_results.append(
@@ -547,6 +711,20 @@ class IPATExecutionService:
                 if purchase_limit_before is None:
                     purchase_limit_before = purchase_limit
                 purchase_limit_after = purchase_limit
+                if purchase_limit is None:
+                    self._warn_purchase_limit_unavailable([order])
+                    skipped_amount += order.amount
+                    order_results.append(
+                        OrderExecutionResult(
+                            order_id=order.order_id,
+                            status="skipped",
+                            message="purchase limit unavailable",
+                            amount=order.amount,
+                            race_id=order.race_id,
+                            ticket_type=order.ticket_type,
+                        )
+                    )
+                    continue
                 active_mode = bankroll_mode or "fixed"
                 if resolved_amounts is None:
                     effective_amounts, active_mode = self._resolve_effective_amounts([order], purchase_limit)
@@ -554,31 +732,75 @@ class IPATExecutionService:
                     effective_amounts = {order.order_id: resolved_amounts.get(order.order_id, 0)}
                 effective_amount = effective_amounts.get(order.order_id, 0)
                 if purchase_limit is not None and effective_amount <= 0:
-                    skipped_amount += order.amount
-                    order_results.append(
-                        OrderExecutionResult(
-                            order_id=order.order_id,
-                            status="skipped",
-                            message=f"purchase limit shortage: required={order.amount} available={purchase_limit}",
-                            amount=order.amount,
-                            race_id=order.race_id,
-                            ticket_type=order.ticket_type,
-                        )
+                    purchase_limit, shortage_message, end_requested = self._wait_for_manual_funding(
+                        driver,
+                        [order],
+                        required_amount=order.amount,
+                        request_timestamp=request.timestamp,
                     )
-                    continue
-                if purchase_limit is not None and active_mode == "fixed" and purchase_limit < order.amount:
-                    skipped_amount += order.amount
-                    order_results.append(
-                        OrderExecutionResult(
-                            order_id=order.order_id,
-                            status="skipped",
-                            message=f"purchase limit shortage: required={order.amount} available={purchase_limit}",
-                            amount=order.amount,
-                            race_id=order.race_id,
-                            ticket_type=order.ticket_type,
+                    purchase_limit_after = purchase_limit
+                    if end_requested:
+                        return ExecutionSummary(
+                            status="cancelled",
+                            message="execution ended by operator after insufficient funds",
+                            executed_amount=executed_amount,
+                            skipped_amount=skipped_amount,
+                            failed_amount=failed_amount,
+                            purchase_limit_before=purchase_limit_before,
+                            purchase_limit_after=purchase_limit_after,
+                            order_results=order_results,
                         )
+                    if shortage_message is not None:
+                        skipped_amount += order.amount
+                        order_results.append(
+                            OrderExecutionResult(
+                                order_id=order.order_id,
+                                status="skipped",
+                                message=shortage_message,
+                                amount=order.amount,
+                                race_id=order.race_id,
+                                ticket_type=order.ticket_type,
+                            )
+                        )
+                        continue
+                    if resolved_amounts is None:
+                        effective_amounts, active_mode = self._resolve_effective_amounts([order], purchase_limit)
+                    effective_amount = effective_amounts.get(order.order_id, 0)
+                if purchase_limit is not None and self._requires_full_funding(active_mode) and purchase_limit < order.amount:
+                    purchase_limit, shortage_message, end_requested = self._wait_for_manual_funding(
+                        driver,
+                        [order],
+                        required_amount=order.amount,
+                        request_timestamp=request.timestamp,
                     )
-                    continue
+                    purchase_limit_after = purchase_limit
+                    if end_requested:
+                        return ExecutionSummary(
+                            status="cancelled",
+                            message="execution ended by operator after insufficient funds",
+                            executed_amount=executed_amount,
+                            skipped_amount=skipped_amount,
+                            failed_amount=failed_amount,
+                            purchase_limit_before=purchase_limit_before,
+                            purchase_limit_after=purchase_limit_after,
+                            order_results=order_results,
+                        )
+                    if shortage_message is not None:
+                        skipped_amount += order.amount
+                        order_results.append(
+                            OrderExecutionResult(
+                                order_id=order.order_id,
+                                status="skipped",
+                                message=shortage_message,
+                                amount=order.amount,
+                                race_id=order.race_id,
+                                ticket_type=order.ticket_type,
+                            )
+                        )
+                        continue
+                    if resolved_amounts is None:
+                        effective_amounts, active_mode = self._resolve_effective_amounts([order], purchase_limit)
+                    effective_amount = effective_amounts.get(order.order_id, 0)
 
                 try:
                     if not driver.navigate_to_win5():
@@ -678,9 +900,10 @@ class IPATExecutionService:
         )
 
     def _build_execution_batches(self, request: OrderRequest) -> list[ExecutionBatch]:
-        grouped: dict[tuple[str, str], list[BetOrder]] = defaultdict(list)
+        grouped: dict[tuple[str, str, str, str], list[BetOrder]] = defaultdict(list)
         for order in sorted(request.orders, key=lambda item: (item.post_time, item.race_id, item.ticket_type, item.order_id)):
-            grouped[(order.race_id, order.ticket_type)].append(order)
+            order_group = order.order_id if order.formation != "SINGLE" else "__group__"
+            grouped[(order.race_id, order.ticket_type, order.formation, order_group)].append(order)
 
         return [
             ExecutionBatch(
@@ -689,7 +912,10 @@ class IPATExecutionService:
                 post_time=orders[0].post_time,
                 orders=orders,
             )
-            for (race_id, ticket_type), orders in sorted(grouped.items(), key=lambda item: (item[0][0], item[0][1]))
+            for (race_id, ticket_type, _formation, _order_group), orders in sorted(
+                grouped.items(),
+                key=lambda item: (item[0][0], item[0][1], item[0][2], item[0][3]),
+            )
         ]
 
     def _group_batches_into_cohorts(self, batches: list[ExecutionBatch]) -> list[list[ExecutionBatch]]:
@@ -708,13 +934,14 @@ class IPATExecutionService:
         purchase_limit: int | None,
         use_json_amounts: bool,
     ) -> tuple[dict[str, dict[str, int]], str]:
-        if use_json_amounts or purchase_limit is None:
+        force_json_amounts = use_json_amounts or self.config.force_json_amounts
+        if force_json_amounts or purchase_limit is None:
             return (
                 {
                     batch.batch_id: {order.order_id: order.amount for order in batch.orders}
                     for batch in cohort
                 },
-                "fixed-first" if use_json_amounts else "fixed",
+                "fixed-json" if force_json_amounts else "fixed",
             )
 
         bankroll_mode = self._get_bankroll_mode(purchase_limit)
@@ -766,6 +993,10 @@ class IPATExecutionService:
         return {batch_id: units * 100 for batch_id, units in allocation_units.items()}
 
     def _wait_until_preparation_window(self, cohort: list[ExecutionBatch], request_timestamp: datetime) -> None:
+        if self.config.skip_preparation_wait:
+            logger.info("Skipping preparation wait because OMNIPOST_SKIP_PREPARATION_WAIT=True")
+            return
+
         target_time = min(self._scheduled_datetime(batch.orders[0], request_timestamp) for batch in cohort)
         if target_time is None:
             return
@@ -776,7 +1007,11 @@ class IPATExecutionService:
             if remaining <= 0:
                 return
             sleep_seconds = min(30, max(1, int(remaining)))
-            logger.info("Waiting for preparation window: %s seconds remaining", sleep_seconds)
+            logger.info(
+                "Waiting for preparation window until %s: %s seconds remaining",
+                preparation_time.strftime("%Y-%m-%d %H:%M"),
+                int(remaining),
+            )
             time_module.sleep(sleep_seconds)
 
     def _subset_request(self, request: OrderRequest, orders: list[BetOrder]) -> OrderRequest:
@@ -816,6 +1051,145 @@ class IPATExecutionService:
         if ticket_type not in NORMAL_BET_TYPE_MAP:
             return f"ticket_type {ticket_type} is not supported by the current normal-bet driver"
         return None
+
+    def _requires_full_funding(self, bankroll_mode: str | None) -> bool:
+        return (bankroll_mode or "fixed").startswith("fixed")
+
+    def _warn_purchase_limit_shortage(
+        self,
+        orders: list[BetOrder],
+        required_amount: int,
+        available_amount: int | None,
+        simulated: bool = False,
+        waiting: bool = False,
+    ) -> None:
+        target = self._format_order_target(orders)
+        prefix = "[simulation] " if simulated else ""
+        action = "停止します。入金後に ok / end を入力してください" if waiting else "投票をスキップします。手動で入金してください"
+        logger.warning(
+            "%s残高不足です。%s: %s required=%s available=%s",
+            prefix,
+            action,
+            target,
+            required_amount,
+            available_amount,
+        )
+
+    def _prompt_manual_top_up(self, orders: list[BetOrder], required_amount: int, available_amount: int | None) -> str:
+        target = self._format_order_target(orders)
+        available_text = "不明" if available_amount is None else f"{available_amount:,}円"
+        print(
+            "\n"
+            "╔══════════════════════════════════════════════╗\n"
+            "║  残高不足です。入金後に処理を再開できます。    ║\n"
+            "╠══════════════════════════════════════════════╣\n"
+            f"║  対象: {target:<36}║\n"
+            f"║  必要額: {required_amount:>10,}円 / 残高: {available_text:<12}║\n"
+            "║  入金後は ok、終了する場合は end を入力。     ║\n"
+            "╚══════════════════════════════════════════════╝"
+        , flush=True)
+
+        while True:
+            response = input("\n入金後に再確認する場合は ok、終了する場合は end: ").strip().lower()
+            if response in {"ok", "end"}:
+                return response
+            print("ok または end を入力してください。", flush=True)
+
+    def _wait_for_manual_funding(
+        self,
+        driver: IPATVoteDriver | IPATWin5VoteDriver,
+        orders: list[BetOrder],
+        required_amount: int,
+        request_timestamp: datetime,
+    ) -> tuple[int | None, str | None, bool]:
+        while True:
+            blocking_reason = self._cutoff_reason(orders[0], request_timestamp)
+            if blocking_reason:
+                return None, blocking_reason, False
+
+            purchase_limit = driver.get_purchase_limit()
+            if purchase_limit is None:
+                self._warn_purchase_limit_unavailable(orders)
+                return None, "purchase limit unavailable", False
+            if purchase_limit >= required_amount:
+                logger.info("✅ 入金後の購入限度額を確認しました: %s円", f"{purchase_limit:,}")
+                return purchase_limit, None, False
+
+            self._warn_purchase_limit_shortage(
+                orders,
+                required_amount=required_amount,
+                available_amount=purchase_limit,
+                waiting=True,
+            )
+            action = self._prompt_manual_top_up(orders, required_amount, purchase_limit)
+            if action == "end":
+                return purchase_limit, None, True
+
+    def _warn_purchase_limit_unavailable(self, orders: list[BetOrder]) -> None:
+        logger.warning(
+            "購入限度額を取得できなかったため投票をスキップします。手動で残高確認・入金してください: %s",
+            self._format_order_target(orders),
+        )
+
+    def _format_order_target(self, orders: list[BetOrder]) -> str:
+        if not orders:
+            return "race=unknown"
+
+        order = orders[0]
+        try:
+            jyo_name, race_num = self._parse_race_id(order.race_id)
+            return f"race={jyo_name}{race_num}R ticket_type={order.ticket_type}"
+        except Exception:
+            return f"race_id={order.race_id} ticket_type={order.ticket_type}"
+
+    def _target_balance_stop_message(self, purchase_limit: int | None) -> str | None:
+        target_amount = int(self.config.stop_target_balance_amount)
+        if target_amount <= 0 or purchase_limit is None:
+            return None
+        if purchase_limit < target_amount:
+            return None
+        return (
+            "target balance reached: "
+            f"available={purchase_limit} target={target_amount}. stopping automated voting"
+        )
+
+    def _build_normal_horse_amount_list(
+        self,
+        orders: list[BetOrder],
+        effective_amounts: dict[str, int],
+    ) -> list[tuple[int, int]]:
+        formation = orders[0].formation if orders else "SINGLE"
+        if formation == "BOX":
+            if len(orders) != 1:
+                raise ValueError("BOX order batching must contain exactly one order")
+
+            order = orders[0]
+            if not order.horse_numbers:
+                raise ValueError(f"horse selections missing for order {order.order_id}")
+            if not order.total_combinations:
+                raise ValueError(f"total_combinations missing for order {order.order_id}")
+
+            effective_total = effective_amounts.get(order.order_id, 0)
+            if effective_total <= 0:
+                return []
+            if effective_total % order.total_combinations != 0:
+                raise ValueError(
+                    f"BOX order amount cannot be redistributed evenly: order={order.order_id} amount={effective_total}"
+                )
+
+            unit_amount = effective_total // order.total_combinations
+            if unit_amount <= 0 or unit_amount % 100 != 0:
+                raise ValueError(
+                    f"BOX order unit amount must stay in 100-yen increments: order={order.order_id} unit={unit_amount}"
+                )
+            return [(horse_number, unit_amount) for horse_number in order.horse_numbers]
+
+        return [
+            (order.horse_number, effective_amounts[order.order_id])
+            for order in orders
+            if order.horse_number is not None
+            and effective_amounts.get(order.order_id, 0) > 0
+        ]
 
     def _resolve_effective_amounts(
         self,

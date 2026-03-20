@@ -17,6 +17,7 @@ TICKET_TYPE_ALIASES = {
     "WIDE": "wide",
     "REN": "ren",
     "QUINELLA": "ren",
+    "UMAREN_BOX": "umaren_box",
     "UMATAN": "umatan",
     "EXACTA": "umatan",
     "SANPUKU": "sanpuku",
@@ -30,6 +31,7 @@ TICKET_TYPE_ALIASES = {
     "枠連": "waku",
     "ワイド": "wide",
     "馬連": "ren",
+    "馬連BOX": "umaren_box",
     "馬単": "umatan",
     "三連複": "sanpuku",
     "3連複": "sanpuku",
@@ -42,6 +44,7 @@ ALLOWED_TICKET_TYPES = {
     "fuku",
     "wide",
     "ren",
+    "umaren_box",
     "umatan",
     "sanpuku",
     "santan",
@@ -85,8 +88,10 @@ class BetOrder:
     ticket_type: str
     amount: int
     horse_number: int | None = None
+    horse_numbers: list[int] | None = None
     unit_amount: int | None = None
     total_combinations: int | None = None
+    formation: str = "SINGLE"
     win5_details: Win5Details | None = None
     min_odds: float | None = None
     expected_ev: float | None = None
@@ -150,8 +155,10 @@ def _parse_bet_order(item: Any, index: int) -> BetOrder:
     memo = _parse_optional_string(item.get("memo"), index, "memo")
 
     horse_number: int | None = None
+    horse_numbers: list[int] | None = None
     unit_amount: int | None = None
     total_combinations: int | None = None
+    formation = "SINGLE"
     win5_details: Win5Details | None = None
 
     if ticket_type == "win5":
@@ -161,6 +168,19 @@ def _parse_bet_order(item: Any, index: int) -> BetOrder:
         if total_combinations != win5_details.total_combinations:
             raise OrderValidationError(
                 f"orders[{index}].total_combinations が win5_details と一致しません"
+            )
+        if amount != unit_amount * total_combinations:
+            raise OrderValidationError(
+                f"orders[{index}].amount は unit_amount * total_combinations と一致する必要があります"
+            )
+    elif ticket_type == "umaren_box":
+        formation = "BOX"
+        horse_numbers = _parse_box_horse_numbers(item.get("horses"), index)
+        unit_amount = _parse_amount(item.get("unit_amount"), index, field_name="unit_amount")
+        total_combinations = _parse_positive_int(item.get("total_combinations"), index, "total_combinations")
+        if total_combinations != _pair_box_combinations(len(horse_numbers)):
+            raise OrderValidationError(
+                f"orders[{index}].total_combinations は horses の BOX 点数と一致する必要があります"
             )
         if amount != unit_amount * total_combinations:
             raise OrderValidationError(
@@ -176,8 +196,10 @@ def _parse_bet_order(item: Any, index: int) -> BetOrder:
         ticket_type=ticket_type,
         amount=amount,
         horse_number=horse_number,
+        horse_numbers=horse_numbers,
         unit_amount=unit_amount,
         total_combinations=total_combinations,
+        formation=formation,
         win5_details=win5_details,
         min_odds=min_odds,
         expected_ev=expected_ev,
@@ -206,6 +228,20 @@ def _parse_horse_number(value: Any, index: int) -> int:
     if horse_number < 1 or horse_number > 18:
         raise OrderValidationError(f"orders[{index}].horse_no は 1 から 18 の範囲で指定してください")
     return horse_number
+
+
+def _parse_box_horse_numbers(value: Any, index: int) -> list[int]:
+    if not isinstance(value, list) or len(value) < 2:
+        raise OrderValidationError(f"orders[{index}].horses は 2 頭以上の配列である必要があります")
+
+    horse_numbers = [_parse_horse_number(candidate, index) for candidate in value]
+    if len(set(horse_numbers)) != len(horse_numbers):
+        raise OrderValidationError(f"orders[{index}].horses に重複した馬番は指定できません")
+    return horse_numbers
+
+
+def _pair_box_combinations(horse_count: int) -> int:
+    return horse_count * (horse_count - 1) // 2
 
 
 def _normalize_ticket_type(value: Any, index: int) -> str:

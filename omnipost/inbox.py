@@ -44,7 +44,10 @@ class InboxMonitor:
     def watch_forever(self) -> None:
         logger.info("OmniPost inbox monitor started: %s", self.config.inbox_dir)
         while True:
-            self.process_pending_files()
+            results = self.process_pending_files()
+            if any(result.execution and result.execution.status == "stopped" for result in results):
+                logger.warning("OmniPost inbox monitor stopped because target balance was reached")
+                return
             time.sleep(self.config.poll_interval_sec)
 
     def _candidate_files(self) -> list[Path]:

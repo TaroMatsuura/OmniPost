@@ -15,8 +15,11 @@ class OmniPostConfig:
     rejected_dir: Path
     logs_dir: Path
     target_balance_amount: Decimal
+    stop_target_balance_amount: Decimal
     execute_votes: bool
     simulate_ipat: bool
+    force_json_amounts: bool
+    skip_preparation_wait: bool
     simulation_purchase_limit: int
     simulation_ignore_cutoff: bool
     cutoff_minutes: int
@@ -31,8 +34,11 @@ class OmniPostConfig:
         rejected_dir = Path(os.getenv("OMNIPOST_REJECTED_DIR", archive_dir / "rejected"))
         logs_dir = Path(os.getenv("OMNIPOST_LOG_DIR", base_dir / "logs"))
         target_balance_amount = Decimal(os.getenv("TARGET_BALANCE_AMOUNT", "0"))
+        stop_target_balance_amount = Decimal(os.getenv("OMNIPOST_STOP_TARGET_BALANCE_AMOUNT", "0"))
         execute_votes = os.getenv("OMNIPOST_EXECUTE_VOTES", "True") == "True"
         simulate_ipat = os.getenv("OMNIPOST_SIMULATE_IPAT", "False") == "True"
+        force_json_amounts = os.getenv("OMNIPOST_FORCE_JSON_AMOUNTS", "False") == "True"
+        skip_preparation_wait = os.getenv("OMNIPOST_SKIP_PREPARATION_WAIT", "False") == "True"
         simulation_purchase_limit = int(os.getenv("OMNIPOST_SIMULATED_PURCHASE_LIMIT", "9999999"))
         simulation_ignore_cutoff = os.getenv("OMNIPOST_SIMULATION_IGNORE_CUTOFF", "True") == "True"
         cutoff_minutes = int(os.getenv("OMNIPOST_CUTOFF_MINUTES", "5"))
@@ -47,8 +53,11 @@ class OmniPostConfig:
             rejected_dir=rejected_dir,
             logs_dir=logs_dir,
             target_balance_amount=target_balance_amount,
+            stop_target_balance_amount=stop_target_balance_amount,
             execute_votes=execute_votes,
             simulate_ipat=simulate_ipat,
+            force_json_amounts=force_json_amounts,
+            skip_preparation_wait=skip_preparation_wait,
             simulation_purchase_limit=simulation_purchase_limit,
             simulation_ignore_cutoff=simulation_ignore_cutoff,
             cutoff_minutes=cutoff_minutes,

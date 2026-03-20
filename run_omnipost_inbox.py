@@ -48,14 +48,16 @@ def main() -> int:
         rejected_count = sum(1 for result in results if result.status == "rejected")
         executed_count = sum(1 for result in results if result.execution and result.execution.status == "executed")
         partial_count = sum(1 for result in results if result.execution and result.execution.status == "partial")
+        stopped_count = sum(1 for result in results if result.execution and result.execution.status == "stopped")
         failed_count = sum(1 for result in results if result.execution and result.execution.status == "failed")
         logging.info(
-            "Scan complete: files=%s accepted=%s rejected=%s executed=%s partial=%s failed=%s",
+            "Scan complete: files=%s accepted=%s rejected=%s executed=%s partial=%s stopped=%s failed=%s",
             len(results),
             accepted_count,
             rejected_count,
             executed_count,
             partial_count,
+            stopped_count,
             failed_count,
         )
         return 0
