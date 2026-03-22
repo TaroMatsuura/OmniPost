@@ -99,6 +99,7 @@ class IPATVoteDriver:
         
         # IPAT URL
         self.pat_url = "https://www.ipat.jra.go.jp/index.cgi"
+        self.menu_url = "https://www.ipat.jra.go.jp/2017/pw_890_i.cgi#!/"
 
     def _cleanup_previous_chrome(self):
         """前回起動したGoogle ChromeやChromeDriverの残骸をクリーンアップする"""
@@ -243,44 +244,119 @@ class IPATVoteDriver:
                 pass
             raise
 
+    def _extract_purchase_limit_from_text(self, text):
+        normalized = (text or "").replace("\xa0", " ")
+        match = re.search(r"購入限度額\s*([0-9,]+)円", normalized, re.MULTILINE)
+        if not match:
+            match = re.search(r"購入限度額[^0-9]*([0-9,]+)円", normalized, re.MULTILINE | re.DOTALL)
+        if not match:
+            return None
+        return int(match.group(1).replace(",", ""))
+
+    def _read_purchase_limit_once(self):
+        selectors = [
+            "span[ng-bind*='purchaseLimit']",
+            "[ng-bind*='purchaseLimit']",
+            "//th[contains(normalize-space(text()), '購入限度額')]/following-sibling::td",
+            "//div[contains(normalize-space(text()), '購入限度額')]/following-sibling::*[1]",
+            "//*[contains(normalize-space(text()), '購入限度額') and contains(normalize-space(text()), '円')]",
+        ]
+
+        for selector in selectors:
+            try:
+                if selector.startswith("//"):
+                    elements = self.driver.find_elements(By.XPATH, selector)
+                else:
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+
+                for el in elements:
+                    if not el.is_displayed():
+                        continue
+                    text = (el.text or "").strip()
+                    limit = self._extract_purchase_limit_from_text(text)
+                    if limit is not None:
+                        logger.info(f"💰 購入限度額を取得しました: {limit:,}円")
+                        return limit
+                    numeric_text = text.replace(",", "").replace("円", "").strip()
+                    if numeric_text.isdigit():
+                        limit = int(numeric_text)
+                        logger.info(f"💰 購入限度額を取得しました: {limit:,}円")
+                        return limit
+            except Exception:
+                continue
+
+        try:
+            body_text = self.driver.find_element(By.TAG_NAME, "body").text
+            limit = self._extract_purchase_limit_from_text(body_text)
+            if limit is not None:
+                logger.info(f"💰 購入限度額を本文テキストから取得しました: {limit:,}円")
+                return limit
+        except Exception:
+            pass
+
+        return None
+
+    def _refresh_purchase_limit_view(self):
+        try:
+            elements = self.driver.find_elements(By.CSS_SELECTOR, "button, a, input[type='button']")
+            for el in elements:
+                try:
+                    if not el.is_displayed():
+                        continue
+                    text = (el.text or "").strip() or el.get_attribute("value") or ""
+                    if text == "更新":
+                        logger.info("🔄 購入限度額表示の『更新』をクリックします")
+                        self.driver.execute_script("arguments[0].click();", el)
+                        time.sleep(1.5)
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return False
+
+    def _open_vote_menu(self):
+        try:
+            current_body = self.driver.find_element(By.TAG_NAME, "body").text
+            if "購入限度額" in current_body and "投票はこちらから" in current_body:
+                return True
+        except Exception:
+            pass
+
+        try:
+            logger.info("📋 購入限度額確認のため投票メニュー画面へ移動します")
+            self.driver.get(self.menu_url)
+            self.wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            time.sleep(1.5)
+            self.clear_popups()
+            return True
+        except Exception as e:
+            logger.warning(f"⚠️ 投票メニュー画面への移動に失敗しました: {e}")
+            return False
+
     def get_purchase_limit(self):
         """購入限度額を取得する"""
         try:
-            # ログイン直後のメニュー画面や通常投票画面に表示されている
             self.clear_popups()
-            
-            selectors = [
-                "span[ng-bind*='purchaseLimit']",
-                "//th[contains(text(), '購入限度額')]/following-sibling::td",
-                "//div[contains(text(), '購入限度額')]/following-sibling::div//span"
-            ]
-            
-            for selector in selectors:
-                try:
-                    if selector.startswith("//"):
-                        el = self.driver.find_element(By.XPATH, selector)
-                    else:
-                        el = self.driver.find_element(By.CSS_SELECTOR, selector)
-                    
-                    if el.is_displayed():
-                        text = el.text.replace(",", "").replace("円", "").strip()
-                        if text:
-                            limit = int(text)
-                            logger.info(f"💰 購入限度額を取得しました: {limit:,}円")
-                            return limit
-                except:
-                    continue
 
-            try:
-                body_text = self.driver.find_element(By.TAG_NAME, "body").text
-                match = re.search(r"購入限度額\s*([0-9,]+)円", body_text)
-                if match:
-                    limit = int(match.group(1).replace(",", ""))
-                    logger.info(f"💰 購入限度額を本文テキストから取得しました: {limit:,}円")
+            # まず現在の画面から取得を試みる
+            for attempt in range(3):
+                limit = self._read_purchase_limit_once()
+                if limit is not None:
                     return limit
-            except Exception:
-                pass
-            
+                if attempt == 0:
+                    self._refresh_purchase_limit_view()
+                time.sleep(1)
+
+            # 現在画面で取れない場合は、購入限度額が安定して表示される投票メニュー画面で再試行
+            if self._open_vote_menu():
+                for attempt in range(5):
+                    limit = self._read_purchase_limit_once()
+                    if limit is not None:
+                        return limit
+                    self._refresh_purchase_limit_view()
+                    time.sleep(1)
+
             logger.warning("⚠️ 購入限度額の取得に失敗しました（要素が見つかりません）")
             return None
         except Exception as e:
@@ -463,6 +539,16 @@ class IPATVoteDriver:
 
         return "\n".join(texts).strip()
 
+    def _is_purchase_result_page(self):
+        try:
+            body_text = (self.driver.find_element(By.TAG_NAME, "body").text or "").strip()
+        except Exception:
+            return False
+
+        if "お客様の投票を受け付けました" in body_text:
+            return True
+        return "投票結果" in body_text and "続けて投票する" in body_text
+
     def _classify_purchase_dialog(self):
         try:
             alert = self.driver.switch_to.alert
@@ -475,7 +561,12 @@ class IPATVoteDriver:
         except Exception:
             pass
 
+        if self._is_purchase_result_page():
+            return "success", "purchase accepted", "result_page"
+
         dialog_text = self._get_visible_dialog_text()
+        if self._is_purchase_result_page():
+            return "success", dialog_text, "result_page"
         if any(keyword in dialog_text for keyword in ["購入限度額を超えました", "残高不足"]):
             return "insufficient_funds", dialog_text, "dialog"
         if any(keyword in dialog_text for keyword in ["締切", "受付時間外", "発売を終了"]):
@@ -483,6 +574,22 @@ class IPATVoteDriver:
         if dialog_text:
             return "confirm", dialog_text, "dialog"
         return "none", "", "none"
+
+    def _resolve_cutoff_or_success(self, dialog_kind, dialog_text, confirm_texts):
+        if dialog_kind != "cutoff":
+            return None
+
+        self._click_purchase_dialog_ok(confirm_texts)
+        time.sleep(1)
+
+        if self._is_purchase_result_page():
+            self.last_vote_status = "executed"
+            self.last_vote_message = "purchase submitted"
+            return True
+
+        self.last_vote_status = "cutoff"
+        self.last_vote_message = dialog_text or "ipat cutoff"
+        return False
 
     def _click_purchase_dialog_ok(self, confirm_texts=None):
         confirm_texts = confirm_texts or ["OK", "ＯＫ", "確認", "はい", "購入"]
@@ -579,10 +686,9 @@ class IPATVoteDriver:
 
             if dialog_kind == "cutoff":
                 logger.warning("⚠️ IPATで締切ダイアログを検知しました")
-                self._click_purchase_dialog_ok(confirm_texts)
-                self.last_vote_status = "cutoff"
-                self.last_vote_message = dialog_text or "ipat cutoff"
-                return False
+                resolved = self._resolve_cutoff_or_success(dialog_kind, dialog_text, confirm_texts)
+                if resolved is not None:
+                    return resolved
 
             success_final = self._click_purchase_dialog_ok(confirm_texts)
             if not success_final:
@@ -603,6 +709,11 @@ class IPATVoteDriver:
             time.sleep(2)
 
             result_kind, result_text, _result_source = self._classify_purchase_dialog()
+            if result_kind == "success":
+                self.last_vote_status = "executed"
+                self.last_vote_message = "purchase submitted"
+                return True
+
             if result_kind == "insufficient_funds":
                 logger.warning("⚠️ 購入確認後に残高不足ダイアログを検知しました")
                 action = self._prompt_for_manual_top_up(result_text, actual_total_yen)
@@ -617,10 +728,9 @@ class IPATVoteDriver:
 
             if result_kind == "cutoff":
                 logger.warning("⚠️ 購入確認後に締切ダイアログを検知しました")
-                self._click_purchase_dialog_ok(confirm_texts)
-                self.last_vote_status = "cutoff"
-                self.last_vote_message = result_text or "ipat cutoff"
-                return False
+                resolved = self._resolve_cutoff_or_success(result_kind, result_text, confirm_texts)
+                if resolved is not None:
+                    return resolved
 
             self.last_vote_status = "executed"
             self.last_vote_message = "purchase submitted"

@@ -296,10 +296,13 @@ class IPATExecutionService:
                 use_json_amounts=is_first_cohort,
             )
 
+            normal_orders: list[BetOrder] = []
+            normal_resolved_amounts: dict[str, int] = {}
+
             for batch in cohort:
                 batch_amounts = cohort_plan.get(batch.batch_id, {})
-                subrequest = self._subset_request(request, batch.orders)
                 if batch.is_win5:
+                    subrequest = self._subset_request(request, batch.orders)
                     summary = self._execute_win5_orders(
                         subrequest,
                         batch.orders,
@@ -307,12 +310,35 @@ class IPATExecutionService:
                         bankroll_mode=bankroll_mode,
                     )
                 else:
-                    summary = self._execute_normal_orders(
-                        subrequest,
-                        batch.orders,
-                        resolved_amounts=batch_amounts,
-                        bankroll_mode=bankroll_mode,
+                    normal_orders.extend(batch.orders)
+                    normal_resolved_amounts.update(batch_amounts)
+                    continue
+                order_results.extend(summary.order_results)
+                executed_amount += summary.executed_amount
+                skipped_amount += summary.skipped_amount
+                failed_amount += summary.failed_amount
+                purchase_limit_after = summary.purchase_limit_after or purchase_limit_after
+                if summary.status == "cancelled":
+                    status = "partial" if executed_amount else "skipped"
+                    return ExecutionSummary(
+                        status=status,
+                        message="execution cancelled by manual confirmation",
+                        executed_amount=executed_amount,
+                        skipped_amount=skipped_amount,
+                        failed_amount=failed_amount,
+                        purchase_limit_before=purchase_limit_before,
+                        purchase_limit_after=purchase_limit_after,
+                        order_results=order_results,
                     )
+
+            if normal_orders:
+                normal_request = self._subset_request(request, normal_orders)
+                summary = self._execute_normal_orders(
+                    normal_request,
+                    normal_orders,
+                    resolved_amounts=normal_resolved_amounts,
+                    bankroll_mode=bankroll_mode,
+                )
                 order_results.extend(summary.order_results)
                 executed_amount += summary.executed_amount
                 skipped_amount += summary.skipped_amount
@@ -380,7 +406,6 @@ class IPATExecutionService:
             driver = IPATVoteDriver()
             driver.start()
             driver.login()
-            driver.select_normal_bet()
 
             for (race_id, ticket_type, formation, _order_group), group_orders in grouped.items():
                 unsupported_message = self._unsupported_normal_bet_message(ticket_type)
@@ -517,6 +542,7 @@ class IPATExecutionService:
 
                 try:
                     jyo_name, race_num = self._parse_race_id(group_orders[0].race_id)
+                    driver.select_normal_bet()
                     driver.select_course_and_race(jyo_name, race_num, expected_time=group_orders[0].post_time.strftime("%H:%M"))
                     horse_amount_list = self._build_normal_horse_amount_list(group_orders, effective_amounts)
                     success = driver.vote_horses(
@@ -914,7 +940,13 @@ class IPATExecutionService:
             )
             for (race_id, ticket_type, _formation, _order_group), orders in sorted(
                 grouped.items(),
-                key=lambda item: (item[0][0], item[0][1], item[0][2], item[0][3]),
+                key=lambda item: (
+                    item[1][0].post_time,
+                    item[0][0],
+                    item[0][1],
+                    item[0][2],
+                    item[0][3],
+                ),
             )
         ]
 
@@ -1030,7 +1062,6 @@ class IPATExecutionService:
             driver = IPATVoteDriver()
             driver.start()
             driver.login()
-            driver.select_normal_bet()
             return driver.get_purchase_limit()
         except Exception:
             logger.exception("Failed to peek purchase limit")

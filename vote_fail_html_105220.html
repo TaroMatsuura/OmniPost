@@ -1,0 +1,1369 @@
+<html lang="ja"><head><style type="text/css">@charset "UTF-8";[ng\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide:not(.ng-hide-animate){display:none !important;}ng\:form{display:block;}.ng-animate-shim{visibility:hidden;}.ng-anchor{position:absolute;}</style>
+    <meta charset="euc-jp">
+    <title>JRA　ネット投票</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <link rel="stylesheet" href="tmpl/app_260206.css">
+    <link rel="apple-touch-icon-precomposed" href="/tmpl/images/ipat_icon.png">
+  </head>
+  <body ng-class="{'modal-open': modal, 'is-stop': oOperation.isStop(), 'print-result': printablemode, 'print-win5-result': printableWIN5mode}" class="modal-open print-result" style="">
+
+    <div id="main" class="ipat-main" ng-class="{noprint: printmode, 'template-error': templateError}">
+      <!-- uiView: --><ui-view class="ng-scope" style=""><navbar class="ng-scope ng-isolate-scope"><div id="ipat-navbar" style="left: 0px;">
+  <div class="container relative" ng-class="{'container-s': vm.bSmallSize == true}">
+    <div class="brand pull-left">
+      <a ui-sref="home" ui-sref-opts="{reload: true}" ng-click="vm.clickLogo()" href="#!/">
+        <h1><img src="tmpl/images/logo.gif" width="123" height="33" alt="JRAネット投票"></h1>
+      </a>
+    </div>
+    <div class="pull-left">
+      <ul class="ipat-navbar-nav">
+        <li>
+          <form method="post" action="" target="_blank" rel="opener" class="ng-pristine ng-valid">
+            <!-- ngIf: vm.cNetbankFlag === vm.CO_NETBANK_TYPE.CC_S_PAT --><button class="btn btn-default ng-scope" ng-click="vm.clickPayment()" ng-disabled="vm.isDisabled()" ng-if="vm.cNetbankFlag === vm.CO_NETBANK_TYPE.CC_S_PAT">
+              <span>入出金</span>
+            </button><!-- end ngIf: vm.cNetbankFlag === vm.CO_NETBANK_TYPE.CC_S_PAT -->
+            <!-- ngIf: vm.cNetbankFlag === vm.CO_NETBANK_TYPE.CC_A_PAT -->
+            <input type="hidden" name="inetid" value="PZG0R2EA">
+            <input type="hidden" name="uh" value="04vCK0">
+            <input type="hidden" name="u" value="21JDtW4BMURW">
+            <input type="hidden" name="nbc" value="efac3a1a7c06446ad7865d1920144121">
+            <input type="hidden" name="i" value="58059954">
+            <input type="hidden" name="nbf" value="1">
+            <input type="hidden" name="mpnf" value="1">
+            <input type="hidden" name="local" value="3">
+          </form>
+        </li>
+        <li>
+          <form method="post" action="" target="_blank" class="ng-pristine ng-valid">
+            <button type="submit" class="btn btn-default" ng-click="vm.clickRaceInfo()">レース情報</button>
+            <input type="hidden" name="cname" value="pw01pde01999999999999999999/C6">
+          </form>
+        </li>
+        <li>
+          <button type="button" class="btn btn-default btn-reference" ng-click="vm.toggleShowRefer()">投票履歴</button>
+        </li>
+      </ul>
+    </div>
+    <ng-transclude>
+  <!-- ngIf: !retry --><div class="pull-right ng-scope" ng-if="!retry">
+    <ul class="ipat-navbar-nav ng-isolate-scope" tab-focus="vm.isOperableByTab">
+      <li class="relative">
+        <!-- ngIf: vm.nBetDataNum > 0 && !vm.bShowBetList && vm.bDeadlineDispFlag && !vm.bSet -->
+        <div class="balloon balloon-alt text-center text-xs animate zoom ng-hide" ng-show="vm.bSet" aria-hidden="true" style="">
+          <div class="block">
+            <strong>投票内容を</strong>
+          </div>
+          <div class="block">
+            <strong>セットしました</strong>
+          </div>
+        </div>
+        <button class="btn btn-vote-list" ng-click="vm.toggleBetList()"><img src="tmpl/images/bet/icon-bet-list.gif" width="63" alt="購入予定リスト">
+          <!-- ngIf: vm.nBetDataNum > 0 -->
+        </button>
+      </li>
+    </ul>
+  </div><!-- end ngIf: !retry -->
+  <bet-list b-show-bet-list="vm.bShowBetList" ng-show="!retry" class="ng-scope ng-isolate-scope" aria-hidden="false"><div class="ipat-vote-list" ng-show="vm.bShowBetList" role="dialog" navbar="true" aria-hidden="false" style="">
+    <horse-combi-modal oa-data="vm.oaHorseCombiModal" b-horse-combi-visible="vm.bVisibleHorseCombiModal" n-total-num="vm.nHorseSetNum" class="ng-isolate-scope"><div id="foreground" class="horse-combi-modal block box-group ng-hide animate ng-isolate-scope" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+    <div class="selection-list">
+        <div class="overlay animate fade ng-hide" ng-show="vm.bHorseCombiVisible" aria-hidden="true"></div>
+        <div class="dialog animate zoom ng-isolate-scope ng-hide" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+            <div class="dialog-header gutter text-lg clearfix">
+                <div class="pull-left" ng-class="{basic: vm.cBetFlag === vm.CO_BET_FLAG.CC_BASIC, intl: vm.cBetFlag === vm.CO_BET_FLAG.CC_INTL}">
+                    <h1>組合せ確認</h1>
+                    <span class="text ng-binding"></span>
+                    <span class="text ng-binding"></span><!-- 空白類文字対策のため、改行をコメントアウト
+                    --><!-- ngIf: vm.isMulti(vm.oaDisplayHorseCombi) -->
+                    <strong class="ng-binding">0</strong><span class="ng-binding">組</span>
+                </div>
+                <button class="btn btn-default btn-lg pull-right" ng-click="vm.bHorseCombiVisible=false;">閉じる</button>
+            </div>
+
+            <!-- ngIf: vm.bScrollArea -->
+        </div>
+    </div>
+</div>
+</horse-combi-modal>
+    <bet-list-cart b-show-bet-list="vm.bShowBetList" close="vm.close()" b-show-result="vm.bShowResult" b-visible-horse-combi-modal="vm.bVisibleHorseCombiModal" oa-horse-combi-modal="vm.oaHorseCombiModal" n-horse-set-num="vm.nHorseSetNum" class="ng-isolate-scope"><!-- ngIf: !vm.bShowResult --><!-- /.ipat-vote-list-inner -->
+</bet-list-cart>
+    <bet-list-result b-show-bet-list="vm.bShowBetList" close="vm.close()" b-show-result="vm.bShowResult" b-visible-horse-combi-modal="vm.bVisibleHorseCombiModal" oa-horse-combi-modal="vm.oaHorseCombiModal" n-horse-set-num="vm.nHorseSetNum" class="ng-isolate-scope"><!-- ngIf: vm.bShowResult --><div class="ipat-vote-list-inner container ng-scope ng-isolate-scope" ng-if="vm.bShowResult" role="document" tab-focus="vm.bShowBetList" navbar="true" style="">
+    <div class="list-header flex gutter clearfix">
+        <div class="block">
+            <h1 class="text-lg block-inline">投票結果</h1>
+        </div>
+        <div class="block flex flex--end">
+            <div class="stats block-inline purchase-price">
+                <div class="flex">
+                    <div>購入限度額</div>
+                    <div class="text-right amount-limit ng-binding">8,000円</div>
+                </div>
+                <div class="flex">
+                    <div>購入可能件数</div>
+                    <div class="text-right amount-available ng-binding">8,996件</div>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-lg" ng-click="vm.clickContinue();">続けて投票する</button>
+        </div>
+    </div><!-- /.list-header -->
+    <sticky-scroll class="list-body" tabindex="">
+        <div class="list-body-inner block gutter bet-result printable">
+            <h2 class="page-header nomargin noprint">お客様の投票を受け付けました。</h2>
+            <h1 class="print-only heading-line text-primary" aria-hidden="true">
+              <img src="tmpl/images/logo-color.gif" width="100" alt="" class="pull-right">
+              投票結果
+            </h1>
+            <div class="list-amount-set block-m-ts block-m-bs">
+                <button class="btn btn-default btn-lg pull-right noprint btn-print" ng-click="vm.clickPrint();">印刷する</button>
+                <div class="block-inline box gutter radius text-lg heading-line">
+                    <span class="block-inline text">受付番号：</span>
+                    <span class="block-inline block-m-r text ng-binding">0004</span>
+                    <span class="block-inline text">受付時刻：</span>
+                    <time class="block-inline block-m-r text ng-binding">10:52</time>
+                    <span class="block-inline text">受付組数：</span>
+                    <span class="block-inline text ng-binding">3</span>
+                </div>
+            </div><!-- /.list-amount-set -->
+            <div class="list-amount-set block-m-ts block-m-bxs text-right">
+                <div class="block-inline box gutter radius text-lg heading-line betmoney">
+                    <span class="block-inline text">購入金額：</span>
+                    <span class="text number ng-binding" ng-bind="vm.oResults.cTotalMoney | number">3,000</span>円
+                </div>
+            </div><!-- /.list-amount-set -->
+
+            <!-- ngIf: vm.oResults.oaBetData.length >= 21 -->
+
+            <div class="list-table block-m-bs">
+                <table class="table table-ipat">
+                    <thead>
+                    <tr class="noprint">
+                        <th scope="col" class="text-center">
+                            <span class="nowrap">件数</span><br>
+                            <span class="nowrap noprint">状況</span>
+                        </th>
+                        <th scope="col" class="print-only" aria-hidden="true"></th>
+                        <th scope="col" class="nowrap text-center" colspan="2">投票内容</th>
+                        <th scope="col" class="nowrap text-center noprint">組数</th>
+                        <th scope="col" class="nowrap text-center th-amount">金額</th>
+                        <th scope="col" class="nowrap text-center noprint">馬券表示</th>
+                    </tr>
+                    <tr class="print-only">
+                      <td class="empty" colspan="6"></td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="print-only" aria-hidden="true">
+                        <th scope="col" class="text-center nowrap status">件数</th>
+                        <th scope="col" class="nowrap text-center status">状況</th>
+                        <th scope="col" class="nowrap text-center" colspan="2">投票内容</th>
+                        <th scope="col" class="noprint"></th>
+                        <th scope="col" class="nowrap text-center th-amount">金額</th>
+                        <th scope="col" class="noprint"></th>
+                    </tr>
+                    <!-- ngRepeat: (i, oNb) in vm.oResults.oaBetData --><tr ng-repeat="(i, oNb) in vm.oResults.oaBetData" class="ng-scope">
+                        <td scope="row" class="situation text-center">
+                            <div id="bet-list-result-1" class="bet-list-index"></div>
+                            <span class="block ng-binding" ng-bind="$index + 1">1</span>
+                            <div class="block noprint" ng-switch="oNb.decisionFlag.id">
+                                <!-- 中止アイコン -->
+                                <!-- ngSwitchWhen: A -->
+                                <!-- 締切アイコン -->
+                                <!-- ngSwitchWhen: 2 -->
+                                <!-- 取消アイコン -->
+                                <!-- ngSwitchWhen: 3 -->
+                                <!-- 一部取消アイコン -->
+                                <!-- ngSwitchWhen: 8 -->
+                                <!-- 判定不能アイコン -->
+                                <!-- ngSwitchWhen: 9 -->
+                            </div>
+                        </td>
+                        <td class="text-center print-only">
+                          <div class="block" ng-switch="oNb.decisionFlag.id">
+                              <!-- 中止アイコン -->
+                              <!-- ngSwitchWhen: A -->
+                              <!-- 締切アイコン -->
+                              <!-- ngSwitchWhen: 2 -->
+                              <!-- 取消アイコン -->
+                              <!-- ngSwitchWhen: 3 -->
+                              <!-- 一部取消アイコン -->
+                              <!-- ngSwitchWhen: 8 -->
+                              <!-- 判定不能アイコン -->
+                              <!-- ngSwitchWhen: 9 -->
+                          </div>
+                        </td>
+                        <td class="vote-content">
+                          <div class="block">
+                            <span class="nowrap-onprint ng-binding"><span class="block-inline ng-binding" ng-bind="oNb.course.name">阪神</span>（日）<span class="block-inline space-1 ng-binding" ng-bind="oNb.race + 'R'">3R</span><span class="block-inline space-2 ng-binding" ng-bind="oNb.type.name">馬連</span></span><!-- ngIf: oNb.method.name --><div class="print-only ng-scope" ng-if="oNb.method.name"></div><!-- end ngIf: oNb.method.name --><span class="block-inline ng-binding" ng-bind="oNb.method.name">ボックス</span>
+                          </div>
+                        </td>
+                        <td class="combi" ng-class="{on: oNb.show}">
+                            <span class="nowrap noprint"><horse-combi-list o-nb="oNb" class="ng-isolate-scope"><div class="block-inline horse-combi-list" ng-class="{on: vm.oNb.show}">
+  <!-- リスト表示START -->
+  <!-- ngIf: vm.oNb.method.id !== vm.CO_METHOD_IDS.CC_BASIC_ID --><div class="block-inline ng-scope" ng-if="vm.oNb.method.id !== vm.CO_METHOD_IDS.CC_BASIC_ID">
+    <!-- ngIf: vm.bIsHeaderOnly -->
+
+    <!-- ngIf: !vm.bIsHeaderOnly --><a ng-if="!vm.bIsHeaderOnly" class="block-inline nowrap ng-scope" href="" ng-click="vm.oNb.show = !vm.oNb.show">
+      <span class="caret-right"></span>
+      <span class="nowrap horse-combi-list-header-area underline" ng-class="{'underline': !vm.oNb.show}">
+        <span>
+          <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse1]" ng-bind="vm.header.horse1">3頭</span>
+        </span>
+        <!-- ngIf: !vm.isEmpty(vm.header.horse2) -->
+        <!-- ngIf: !vm.isEmpty(vm.header.horse3) -->
+      </span>
+    </a><!-- end ngIf: !vm.bIsHeaderOnly -->
+
+    <!-- ngIf: !vm.bIsHeaderOnly --><ul class="list list-unstyled ng-scope ng-hide" ng-show="vm.oNb.show" ng-if="!vm.bIsHeaderOnly" aria-hidden="true">
+      <!-- ngRepeat: oDetail in vm.body --><li ng-repeat="oDetail in vm.body" class="horse-combi-list-area ng-scope">
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse1]" set-heading-value="3頭">08</span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse2]" set-heading-value=""></span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse3]" set-heading-value=""></span>
+      </li><!-- end ngRepeat: oDetail in vm.body --><li ng-repeat="oDetail in vm.body" class="horse-combi-list-area ng-scope">
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse1]" set-heading-value="3頭">12</span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse2]" set-heading-value=""></span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse3]" set-heading-value=""></span>
+      </li><!-- end ngRepeat: oDetail in vm.body --><li ng-repeat="oDetail in vm.body" class="horse-combi-list-area ng-scope">
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse1]" set-heading-value="3頭">13</span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse2]" set-heading-value=""></span>
+        <span class="separator"></span>
+        <span class="set-heading ng-binding horse-width" ng-class="[vm.oWidth.horse3]" set-heading-value=""></span>
+      </li><!-- end ngRepeat: oDetail in vm.body -->
+    </ul><!-- end ngIf: !vm.bIsHeaderOnly -->
+  </div><!-- end ngIf: vm.oNb.method.id !== vm.CO_METHOD_IDS.CC_BASIC_ID -->
+  <!-- リスト表示END -->
+  <!-- ラベル表示START -->
+  <!-- ngIf: vm.oNb.method.id === vm.CO_METHOD_IDS.CC_BASIC_ID -->
+  <!-- ラベル表示END -->
+</div>
+</horse-combi-list></span>
+                            <div class="print-only">
+                              <span ng-switch="oNb.type.id">
+                                <!-- 単勝 -->
+                                <!-- ngSwitchWhen: 1 -->
+                                <!-- 複勝 -->
+                                <!-- ngSwitchWhen: 2 -->
+                                <!-- 枠連 -->
+                                <!-- ngSwitchWhen: 3 -->
+                                <!-- 馬連 -->
+                                <!-- ngSwitchWhen: 4 --><span ng-switch-when="4" class="ng-scope">
+                                  <span ng-switch="oNb.method.id">
+                                    <!-- 通常 -->
+                                    <!-- ngSwitchWhen: 0 -->
+                                    <!-- ながし -->
+                                    <!-- ngSwitchWhen: 3 -->
+                                    <!-- ボックス -->
+                                    <!-- ngSwitchWhen: 2 --><span ng-switch-when="2" class="ng-binding ng-scope">
+                                      08, 12, 13
+                                    </span><!-- end ngSwitchWhen: -->
+                                    <!-- フォーメーション -->
+                                    <!-- ngSwitchWhen: 1 -->
+                                  </span>
+                                </span><!-- end ngSwitchWhen: -->
+                                <!-- ワイド -->
+                                <!-- ngSwitchWhen: 5 -->
+
+                                <!-- 馬単 -->
+                                <!-- ngSwitchWhen: 6 -->
+                                <!-- 3連複 -->
+                                <!-- ngSwitchWhen: 7 -->
+
+                                <!-- ３連単 -->
+                                <!-- ngSwitchWhen: 8 -->
+                              </span>
+                            </div>
+                        </td>
+                        <td class="sets text-right noprint">
+                            <!-- ngIf: oNb.horseSetNum > 0 --><a href="" ng-if="oNb.horseSetNum &gt; 0" ng-click="vm.showHorseCombiModal(oNb)" class="ng-binding ng-scope">3組</a><!-- end ngIf: oNb.horseSetNum > 0 -->
+                            <!-- ngIf: oNb.horseSetNum === 0 -->
+                        </td>
+                        <td class="amount nowrap text-right">
+                          <div class="block">
+                            <div class="text">
+                                <!-- ngIf: oNb.horseSetNum > 1 --><div class="pull-left text ng-scope" ng-if="oNb.horseSetNum &gt; 1">各</div><!-- end ngIf: oNb.horseSetNum > 1 -->
+                                <div class="clearfix text ng-binding">1,000円</div>
+                            </div>
+                            <!-- ngIf: oNb.horseSetNum > 1 --><div class="text ng-scope" ng-if="oNb.horseSetNum &gt; 1">
+                                <div class="pull-left text">計</div>
+                                <div class="clearfix text ng-binding">3,000円</div>
+                            </div><!-- end ngIf: oNb.horseSetNum > 1 -->
+                          </div>
+                        </td>
+                        <td class="text-center noprint">
+                            <button ng-disabled="!vm.isEnableTicket(oNb)" class="btn btn-default btn-lg" ng-click="vm.showTicket(oNb)">
+                                <!-- ngIf: vm.isEnableTicket(oNb) --><img ng-if="vm.isEnableTicket(oNb)" src="tmpl/images/icon-ticket.gif" width="39" alt="馬券表示" class="ng-scope"><!-- end ngIf: vm.isEnableTicket(oNb) -->
+                                <!-- ngIf: !vm.isEnableTicket(oNb) -->
+                            </button>
+                        </td>
+                    </tr><!-- end ngRepeat: (i, oNb) in vm.oResults.oaBetData -->
+                    <tr class="list-footer">
+                      <td class="total text-right" colspan="6">
+                          <span class="text">購入金額：</span>
+                          <span class="number ng-binding" ng-bind="vm.oResults.cTotalMoney | number">3,000</span>円
+                      </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div><!-- /.list-table -->
+            <div class="block-m-ts block-m-bs text-right noprint">
+                <button class="btn btn-default btn-lg" ng-click="vm.clickPrint();">印刷する</button>
+            </div>
+            <div class="block block-m-bs text-sm clearfix noprint">
+                <div class="block pull-left hide ng-binding">63551487</div>
+                <div class="block pull-right">
+                    <a ui-sref="logout" href="#!/logout">ログアウト</a>
+                </div>
+            </div>
+        </div><!-- /.list-body-inner -->
+    </sticky-scroll><!-- /.list-body -->
+  <div class="list-loading ng-hide" ng-show="vm.bLoading" aria-hidden="true">
+    <div class="inner">
+      <img src="tmpl/images/loading-sm.gif" width="105" alt="">
+    </div>
+  </div>
+</div><!-- end ngIf: vm.bShowResult --><!-- /.ipat-vote-list-inner -->
+</bet-list-result>
+</div>
+<!-- オーバーレイ -->
+<div class="ipat-vote-list-overlay" ng-show="vm.bShowBetList" aria-hidden="false" style=""></div>
+</bet-list>
+</ng-transclude>
+    <bet-refer b-visible="vm.bShowRefer" n-pay-easy-flag="vm.nPayEasyFlag" class="ng-isolate-scope"><div class="ipat-bet-refer-overlay ng-hide" ng-show="vm.bVisible" aria-hidden="true"></div>
+<div class="ipat-bet-refer ng-hide ng-isolate-scope" ng-show="vm.bVisible" role="dialog" tab-focus="vm.bVisible" navbar="true" aria-hidden="true">
+<horse-combi-modal oa-data="vm.oaHorseCombiModal" b-horse-combi-visible="vm.bVisibleHorseCombiModal" n-total-num="vm.nHorseSetNum" c-bet-flag="vm.oSelectedData.betFlag.id" class="ng-isolate-scope"><div id="foreground" class="horse-combi-modal block box-group ng-hide animate ng-isolate-scope" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+    <div class="selection-list">
+        <div class="overlay animate fade ng-hide" ng-show="vm.bHorseCombiVisible" aria-hidden="true"></div>
+        <div class="dialog animate zoom ng-isolate-scope ng-hide" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+            <div class="dialog-header gutter text-lg clearfix">
+                <div class="pull-left" ng-class="{basic: vm.cBetFlag === vm.CO_BET_FLAG.CC_BASIC, intl: vm.cBetFlag === vm.CO_BET_FLAG.CC_INTL}">
+                    <h1>組合せ確認</h1>
+                    <span class="text ng-binding"></span>
+                    <span class="text ng-binding"></span><!-- 空白類文字対策のため、改行をコメントアウト
+                    --><!-- ngIf: vm.isMulti(vm.oaDisplayHorseCombi) -->
+                    <strong class="ng-binding">0</strong><span class="ng-binding">組</span>
+                </div>
+                <button class="btn btn-default btn-lg pull-right" ng-click="vm.bHorseCombiVisible=false;">閉じる</button>
+            </div>
+
+            <!-- ngIf: vm.bScrollArea -->
+        </div>
+    </div>
+</div>
+</horse-combi-modal>
+<win5-horse-combi-modal o-match-list="vm.oWIN5MatchList" b-visible="vm.bVisibleWIN5HorseCombiModal" class="ng-isolate-scope"><div id="foreground" class="win5-horse-combi-modal block box-group ng-hide" ng-show="vm.bVisible" aria-hidden="true">
+    <div class="selection-list" ng-class="{'with-footer' : vm.oHorseCombiPager.canPaging()}">
+        <div class="overlay ng-hide" ng-show="vm.bVisible" aria-hidden="true"></div>
+        <div class="dialog ng-isolate-scope ng-hide" ng-show="vm.bVisible" tab-focus="vm.bVisible" aria-hidden="true">
+          <div class="dialog-header gutter text-lg clearfix">
+            <div class="pull-left">
+              <h1>組合せ確認</h1>
+              <span class="text ng-binding"></span>
+                <strong class="ng-binding"></strong>組
+              </div>
+              <button class="btn btn-default btn-lg pull-right" ng-click="vm.bVisible=false;">閉じる</button>
+            </div>
+            <!-- ngIf: vm.bScrollArea --><div class="dialog-body gutter ng-scope" ng-if="vm.bScrollArea">
+                <table>
+                    <thead>
+                        <tr>
+                            <!-- ngRepeat: oWin5race in vm.oMatchList.oaWin5race -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ngRepeat: oHorseCombi in vm.oHorseCombiPager.data -->
+                    </tbody>
+                </table>
+            </div><!-- end ngIf: vm.bScrollArea -->
+            <!-- ngIf: vm.oHorseCombiPager.canPaging() -->
+        </div>
+    </div>
+</div>
+</win5-horse-combi-modal>
+
+  <!-- ngIf: !vm.bShowBetReferDetail --><div class="bet-refer bet-refer-list ng-scope" ng-if="!vm.bShowBetReferDetail">
+
+    <div class="bet-refer-inner container ng-hide" ng-show="vm.bVisible &amp;&amp; !vm.bShowBetReferDetail" aria-hidden="true">
+      <div class="bet-refer-inner-inner">
+        <div class="result-header block gutter clearfix" ng-class="{'show-pay-easy': vm.nPayEasyFlag === vm.CN_IS_SHOW_PAYEASY}">
+          <div class="pull-left">
+            <h1 class="text text-lg">投票履歴一覧</h1>
+          </div>
+          <button class="btn btn-default btn-lg pull-right" ng-click="vm.close()">閉じる</button>
+        </div><!-- /.result-header -->
+        <div class="result-body-wrapper block clearfix">
+          <div class="result-body block clearfix" tabindex="">
+            <div class="result-body-inner block gutter">
+              <h2 class="page-header nomargin block-p-bs">
+                当日分・前日分の投票履歴をご確認いただけます。<br>「受付番号」を選択すると、投票内容を表示します。<button class="block-inline btn-help block-m-bxs" title="ヘルプ" role="button" tabindex="0"></button><br>
+                ※「受付番号」「受付番号数」は「地方」を除く購入分を表示しています。<br>
+                　その他の項目は、「JRA」「WIN5」「海外」「地方」を合わせた内容です。
+              </h2>
+
+              <div class="block block-m-bs box gutter radius">
+                <form class="block block-m-txs ng-pristine ng-valid">
+                  <!-- <span class="text block-m-rs"></span> -->
+                  <label for="refer-today">
+                    <input type="radio" id="refer-today" name="nSelectedDay" ng-model="vm.oInput.nSelectedDay" ng-change="vm.changeDay()" ng-value="vm.CO_SELECTED_DAY.CN_THE_DAY" class="ng-pristine ng-untouched ng-valid ng-not-empty" value="1" aria-invalid="false"><span class="check horizontal"></span> 当日分　
+                  </label>
+                  <label for="refer-before">
+                    <input type="radio" id="refer-before" name="nSelectedDay" ng-model="vm.oInput.nSelectedDay" ng-change="vm.changeDay()" ng-value="vm.CO_SELECTED_DAY.CN_BEFORE_DAY" class="ng-pristine ng-untouched ng-valid ng-not-empty" value="2" aria-invalid="false"><span class="check horizontal"></span> 前日分
+                  </label>
+                  <div class="divider"></div>
+                  <span class="text block-m-rs">照会内容</span>
+                  <label for="refer-normal">
+                    <input type="checkbox" id="refer-normal" name="released" ng-model="vm.oInput.bBasicFlg" ng-change="vm.changeBetType()" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><span class="check horizontal"></span> JRA　
+                  </label>
+                  <label for="refer-int">
+                    <input type="checkbox" id="refer-int" name="released" ng-model="vm.oInput.bIntlFlg" ng-change="vm.changeBetType()" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><span class="check horizontal"></span> 海外　
+                  </label>
+                  <label for="refer-win5">
+                    <input type="checkbox" id="refer-win5" name="released" ng-model="vm.oInput.bWIN5Flg" ng-change="vm.changeBetType()" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><span class="check horizontal"></span> WIN5
+                  </label>
+                </form>
+              </div>
+              <div class="refer-club-refresh-area">
+                <div class="block referlink">
+                  <form name="FORM_REFER" method="post" action="" target="_blank" class="ng-pristine ng-valid">
+                    <span class="page-header">過去分（60日間）の投票履歴等の確認は<a href="" ng-click="vm.clickBetReferSiteLink()">こちら</a></span>
+                    <input type="hidden" name="inetid" value="">
+                    <input type="hidden" name="uh" value="">
+                    <input type="hidden" name="u" value="">
+                    <input type="hidden" name="i" value="">
+                    <input type="hidden" name="local" value="">
+                    <input type="hidden" name="bac" value="">
+                  </form>
+                </div>
+                <div class="block gutter">
+                  <time class="ng-binding"></time>現在 <button class="btn btn-default btn-lg" ng-click="vm.refresh()">表示更新</button>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-7 inquiry-col">
+                  <div class="flex">
+                    <!-- ngRepeat: (tableIndex, range) in vm.oaBetReferListRange -->
+                  </div>
+
+                </div>
+
+                <div class="col-sm-5 balance-col">
+                  <table class="table table-ipat nohover">
+                    <thead>
+                      <tr>
+                        <th colspan="4" class="text-center">購入状況
+                          <!-- ngIf: vm.oInput.nSelectedDay === vm.CO_SELECTED_DAY.CN_THE_DAY && vm.isApatUser() -->
+                          <!-- ngIf: vm.oInput.nSelectedDay === vm.CO_SELECTED_DAY.CN_THE_DAY && !vm.isApatUser() --><button class="block-inline btn-help block-m-ls ng-scope" ng-if="vm.oInput.nSelectedDay === vm.CO_SELECTED_DAY.CN_THE_DAY &amp;&amp; !vm.isApatUser()" title="ヘルプ" role="button" tabindex="0"></button><!-- end ngIf: vm.oInput.nSelectedDay === vm.CO_SELECTED_DAY.CN_THE_DAY && !vm.isApatUser() -->
+                          <!-- ngIf: vm.oInput.nSelectedDay === vm.CO_SELECTED_DAY.CN_BEFORE_DAY -->
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="header-column">受付番号数</td>
+                        <td class="text-right ng-binding">件</td>
+                      </tr>
+                      <!-- ngIf: vm.oUserInfo.cNetbankFlag === vm.CO_NETBANK_TYPE.CC_A_PAT && vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">累計購入金額</td>
+                        <td class="text-right ng-binding">円</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">累計払戻金額</td>
+                        <td class="text-right ng-binding">円</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">1日分購入金額</td>
+                        <td class="text-right ng-binding">円</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">1日分払戻金額</td>
+                        <td class="text-right ng-binding">円</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">購入限度額</td>
+                        <td class="text-right ng-binding">円</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                      <!-- ngIf: vm.isTheDay() --><tr ng-if="vm.isTheDay()" class="ng-scope">
+                        <td class="header-column">購入可能件数</td>
+                        <td class="text-right ng-binding">件</td>
+                      </tr><!-- end ngIf: vm.isTheDay() -->
+                    </tbody>
+                  </table>
+                </div>
+              </div><!-- /.row -->
+            </div><!-- /.result-body-inner -->
+          </div><!-- /.result-body -->
+        </div><!-- /.result-body-wrapper -->
+        <div class="list-loading ng-hide" ng-show="vm.bIsLoading" aria-hidden="true">
+          <div class="inner">
+            <img src="tmpl/images/loading-sm.gif" width="105" alt="">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+
+  </div><!-- end ngIf: !vm.bShowBetReferDetail --><!-- /.bet-refer -->
+
+  <!-- ngIf: vm.bShowBetReferDetail --><!-- /.bet-refer -->
+
+</div>
+</bet-refer>
+  </div>
+</div>
+</navbar>
+<div class="ipat-breadcrumb container ng-scope" ng-show="!retry" aria-hidden="false">
+  <ul class="breadcrumb">
+    <li><a ui-sref="home" ng-click="vm.clickHomeLink()" href="#!/">投票メニュー</a></li>
+    <!-- ngIf: vm.bHasBreadcrumbEvent === true -->
+    <!-- ngIf: vm.bHasBreadcrumbEvent !== true --><li ng-if="vm.bHasBreadcrumbEvent !== true" class="ng-binding ng-scope">通常投票</li><!-- end ngIf: vm.bHasBreadcrumbEvent !== true -->
+    <!-- ngIf: vm.cBreadcrumbBeforeRefine !== '' -->
+  </ul>
+  <h1 class="ng-binding">通常投票</h1>
+</div>
+
+<div class="ipat-vote ng-scope" ng-hide="isFirstRequestFailed" ng-show="!retry" aria-hidden="false">
+  <nav class="ipat-vote-nav text-lg">
+    <ul class="nav nav-tabs main-container container">
+      <li ng-class="{active:vm.$state.includes('bet.basic')}" class="active">
+        <a ui-sref="bet.basic" href="#!/bet/basic">通常投票</a>
+      </li>
+      <li ng-class="{active:vm.$state.includes('bet.odds')}">
+        <a ui-sref="bet.odds.type" href="#!/bet/odds/type">オッズ投票</a>
+      </li>
+      <li ng-class="{active:vm.$state.includes('bet.card')}">
+        <a ui-sref="bet.card.basic" href="#!/bet/card/basic">マークカード投票</a>
+      </li>
+      <li ng-class="{active:vm.$state.includes('bet.forecast')}">
+        <a ui-sref="bet.forecast" href="#!/bet/forecast">予想印投票</a>
+      </li>
+      <li ng-class="{active:vm.$state.includes('bet.pack')}">
+        <a ui-sref="bet.pack" href="#!/bet/pack">パック投票</a>
+      </li>
+    </ul>
+  </nav>
+  <!-- uiView: --><ui-view class="ng-scope"><main class="ipat-vote-basic main-container main-content container ng-scope" set-height="" style="min-height: 801px;">
+
+  <select-course-race o-guide="vm.oGuide" o-race="vm.oRace" change-race="vm.changeRace($bIsButton)" b-all-race-flag="vm.bAllRaceFlag" class="ng-isolate-scope"><div class="ipat-select-course-race box radius block-m-b" ng-class="{on: vm.bToggleSwitcher, gutter: !vm.oCourseRaceType.bPullDown}" style="">
+
+  <div class="pulldown block gutter block-group" ng-show="vm.oCourseRaceType.bPullDown" aria-hidden="false" style="">
+
+      <div class="block-inline pull-left">
+        <div class="block-inline">
+          <!-- ngIf: !vm.bRetryFlag --><button ng-if="!vm.bRetryFlag" class="block-inline btn-help ng-scope" title="ヘルプ" role="button" tabindex="0"></button><!-- end ngIf: !vm.bRetryFlag -->
+          <!-- ngIf: vm.bRetryFlag -->
+          <label for="select-course-race-course" class="block-inline block-m-rxs">場名</label>
+          <select id="select-course-race-course" ng-model="vm.cSelectedCourseId" ng-change="vm.selectCourseForPulldown()" ng-options="oMgAddedJgRn.courseId as oMgAddedJgRn.course.name + '(' + oMgAddedJgRn.week.name + ')' for oMgAddedJgRn in vm.oMgAddedJgRn" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="中山(日)" value="string:A">中山(日)</option><option label="阪神(日)" value="string:B" selected="selected">阪神(日)</option><option label="中京(日)" value="string:C">中京(日)</option></select>
+          <!-- ngIf: vm.nSelectedReleased === vm.CO_SELECTED_DAY.CN_BEFORE_DAY -->
+        </div>
+      </div>
+      <!-- ngIf: vm.existsSaleRace() && vm.oCourseRaceType.bPullDown --><div class="block-inline block-race ng-scope" ng-if="vm.existsSaleRace() &amp;&amp; vm.oCourseRaceType.bPullDown" style="">
+        <div class="block-inline block-m-rxs">
+          <label for="select-course-race-race" class="block-inline block-m-rxs">レース</label>
+          <select id="select-course-race-race" ng-model="vm.oSelectedJgRn" ng-change="vm.selectRaceForPulldown()" ng-options="oJgRn as vm.makeRaceName(oJgRn) for oJgRn in vm.oSelectedMgAddedJgRn.oaJgRn | filter:vm.isVisibleSelectRace
+                  track by oJgRn.nRaceIndex" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="3R" value="2" selected="selected">3R</option><option label="4R" value="3">4R</option><option label="5R" value="4">5R</option><option label="6R" value="5">6R</option><option label="7R" value="6">7R</option><option label="8R" value="7">8R</option><option label="9R 皆生特別" value="8">9R 皆生特別</option><option label="10R レグルスステークス" value="9">10R レグルスステークス</option><option label="11R 第74回阪神大賞典(GII)" value="10">11R 第74回阪神大賞典(GII)</option><option label="12R" value="11">12R</option><option label="全レース" value="14">全レース</option></select>
+        </div>
+        <!-- ngIf: vm.isShowDeadlineForPulldown() --><div class="block-inline ng-scope" ng-if="vm.isShowDeadlineForPulldown()">
+          <span class="text">締切時刻</span>
+          <time class="text ng-binding">11:04</time>
+        </div><!-- end ngIf: vm.isShowDeadlineForPulldown() -->
+      </div><!-- end ngIf: vm.existsSaleRace() && vm.oCourseRaceType.bPullDown -->
+      <!-- ngIf: !vm.existsSaleRace() -->
+
+  </div><!-- /.pulldown -->
+
+  <div class="race-selection ng-hide" ng-show="!vm.oCourseRaceType.bPullDown" aria-hidden="true" style="">
+    <div class="block gutter underlined clearfix">
+      <h2 class="page-header pull-left">場名・レース番号を選択してください。 <button class="btn-help block-inline block-m-lxs" title="ヘルプ" role="button" tabindex="0"></button></h2>
+    </div>
+      <!-- ngIf: vm.oGuide.oaMg.length > 0 --><div ng-if="vm.oGuide.oaMg.length &gt; 0" class="ng-scope">
+        <div class="block gutter-sm">
+          <span class="text">場名</span>
+        </div>
+        <div class="places">
+          <!-- ngRepeat: oCourses in vm.aCoursesOfDay | filter: '!undefined' --><div ng-repeat="oCourses in vm.aCoursesOfDay | filter: '!undefined'" class="ng-scope" style="">
+            <!-- ngRepeat: (cCourseIndex, oCourse) in oCourses --><div class="place-btn-area block-inline gutter-sm ng-scope" ng-repeat="(cCourseIndex, oCourse) in oCourses">
+              <button class="btn btn-default btn-lg btn-block" ng-click="vm.selectCourse(oCourse.courseId)" ng-class="{on: vm.cSelectedCourseId === oCourse.courseId}">
+                <div class="place-name">
+                  <!-- ngIf: vm.cSelectedCourseId === oCourse.courseId -->
+                  <span class="ng-binding">中山（日）</span>
+                </div>
+                <span class="text-sm">
+                  <span class="text block-m-rs ng-binding">天候：晴</span>
+                  <span class="text block-m-rs ng-binding">芝：良</span>
+                  <span class="text ng-binding">ダ：良</span>
+                </span>
+              </button>
+            </div><!-- end ngRepeat: (cCourseIndex, oCourse) in oCourses --><div class="place-btn-area block-inline gutter-sm ng-scope" ng-repeat="(cCourseIndex, oCourse) in oCourses">
+              <button class="btn btn-default btn-lg btn-block on" ng-click="vm.selectCourse(oCourse.courseId)" ng-class="{on: vm.cSelectedCourseId === oCourse.courseId}">
+                <div class="place-name">
+                  <!-- ngIf: vm.cSelectedCourseId === oCourse.courseId --><img class="checked ng-scope" src="tmpl/images/icon-checked.gif" width="18" alt="" ng-if="vm.cSelectedCourseId === oCourse.courseId"><!-- end ngIf: vm.cSelectedCourseId === oCourse.courseId -->
+                  <span class="ng-binding">阪神（日）</span>
+                </div>
+                <span class="text-sm">
+                  <span class="text block-m-rs ng-binding">天候：晴</span>
+                  <span class="text block-m-rs ng-binding">芝：良</span>
+                  <span class="text ng-binding">ダ：良</span>
+                </span>
+              </button>
+            </div><!-- end ngRepeat: (cCourseIndex, oCourse) in oCourses --><div class="place-btn-area block-inline gutter-sm ng-scope" ng-repeat="(cCourseIndex, oCourse) in oCourses">
+              <button class="btn btn-default btn-lg btn-block" ng-click="vm.selectCourse(oCourse.courseId)" ng-class="{on: vm.cSelectedCourseId === oCourse.courseId}">
+                <div class="place-name">
+                  <!-- ngIf: vm.cSelectedCourseId === oCourse.courseId -->
+                  <span class="ng-binding">中京（日）</span>
+                </div>
+                <span class="text-sm">
+                  <span class="text block-m-rs ng-binding">天候：晴</span>
+                  <span class="text block-m-rs ng-binding">芝：良</span>
+                  <span class="text ng-binding">ダ：良</span>
+                </span>
+              </button>
+            </div><!-- end ngRepeat: (cCourseIndex, oCourse) in oCourses -->
+          </div><!-- end ngRepeat: oCourses in vm.aCoursesOfDay | filter: '!undefined' -->
+        </div><!-- /.places -->
+        <!-- ngIf: vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn.length > 0 --><div class="block gutter-sm ng-scope" ng-if="vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn.length &gt; 0">
+          <span class="text">レース番号（締切時刻）</span>
+        </div><!-- end ngIf: vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn.length > 0 -->
+        <div class="races">
+          <!-- ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null" style="">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0" disabled="disabled">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">1</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 --><strong ng-if="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0" ng-bind="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY ? oJgRn.raceStatus.name : vm.CC_ALL_TYPE_NOTHING" class="ng-binding ng-scope">締切</strong><!-- end ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0" disabled="disabled">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">2</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 --><strong ng-if="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0" ng-bind="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY ? oJgRn.raceStatus.name : vm.CC_ALL_TYPE_NOTHING" class="ng-binding ng-scope">締切</strong><!-- end ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope on" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) --><img class="checked ng-scope" src="tmpl/images/icon-checked.gif" width="18" alt="" ng-if="vm.nSelectedRace === (oJgRn.nRaceIndex + 1)"><!-- end ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">3</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">11:04</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">4</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">11:34</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">5</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">12:24</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">6</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">12:54</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">7</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">13:24</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">8</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">13:54</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">9</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">14:24</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">皆生特別<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">10</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">15:00</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">レグルスステークス<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">11</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">15:44</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">阪神大賞典<span class="ng-binding">(GII)</span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 --><button ng-if="oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(oJgRn.nRaceIndex + 1)" ng-class="{on: vm.nSelectedRace === (oJgRn.nRaceIndex + 1)}" ng-disabled="oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0">
+              <div class="race-no">
+                <!-- ngIf: vm.nSelectedRace === (oJgRn.nRaceIndex + 1) -->
+                <span class="text ng-binding" ng-bind="oJgRn.nRaceIndex + 1">12</span>R
+                <!-- ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 --><span ng-if="oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY &amp;&amp; oJgRn.typeStatus.length &gt; 0" class="ng-scope">
+                  (<time class="text ng-binding" ng-bind="oJgRn.deadline">16:24</time>)
+                </span><!-- end ngIf: oJgRn.raceStatus.id === vm.CO_RACE_STATUS.SALE.CC_KEY && oJgRn.typeStatus.length > 0 -->
+                <!-- ngIf: oJgRn.raceStatus.id !== vm.CO_RACE_STATUS.SALE.CC_KEY || oJgRn.typeStatus.length === 0 -->
+              </div>
+              <div class="race-name">
+                <span class="text-sm ng-binding">　<span class="ng-binding"></span></span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' --><!-- ngIf: oJgRn !== null --><div ng-repeat="oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined'" class="race ng-scope" ng-if="oJgRn !== null">
+            <!-- ngIf: oJgRn.nRaceIndex !== vm.CC_ALL_RACE_NUM - 1 -->
+            <!-- ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) --><button ng-if="oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 &amp;&amp; vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] )" class="btn btn-default btn-lg btn-block ng-scope" ng-click="vm.selectRace(vm.CC_ALL_RACE_NUM)">
+              <div class="race-name">
+                <span class="text">全レース投票</span>
+              </div>
+            </button><!-- end ngIf: oJgRn.nRaceIndex === vm.CC_ALL_RACE_NUM - 1 && vm.availableAllRaceButton( vm.oMgAddedJgRn[vm.cSelectedCourseId] ) -->
+          </div><!-- end ngIf: oJgRn !== null --><!-- end ngRepeat: oJgRn in vm.oMgAddedJgRn[vm.cSelectedCourseId].oaJgRn | filter: '!undefined' -->
+        </div>
+      </div><!-- end ngIf: vm.oGuide.oaMg.length > 0 -->
+
+      <!-- ngIf: vm.oGuide.oaMg.length === 0 -->
+    </div>
+  </div><!-- /race-selection -->
+
+
+</select-course-race>
+
+  <!-- ngIf: vm.oCourseRaceType.bPullDown --><div class="block relative ng-scope ng-isolate-scope" ng-if="vm.oCourseRaceType.bPullDown" ng-class="{disabled: vm.oRace.nRaceIndex === -1}" ng-disabled="vm.oRace.nRaceIndex === -1" tab-focus="vm.oRace.nRaceIndex === -1" aria-disabled="false" style="">
+    <div class="vote-overlay ng-hide" ng-show="vm.oRace.nRaceIndex === -1" aria-hidden="true"></div>
+    <div class="vote-type block block-m-bs box gutter radius text-lg">
+      <!-- 単勝・複勝 -->
+      <!-- ngIf: vm.oSelectType.id === '1' || vm.oSelectType.id === '2' -->
+      <!-- その他 -->
+      <!-- ngIf: vm.oSelectType.id !== '1' && vm.oSelectType.id !== '2' --><button class="block-inline btn-help ng-scope" ng-if="vm.oSelectType.id !== '1' &amp;&amp; vm.oSelectType.id !== '2'" title="ヘルプ" role="button" tabindex="0" style=""></button><!-- end ngIf: vm.oSelectType.id !== '1' && vm.oSelectType.id !== '2' -->
+
+      <label for="bet-basic-type" class="text">式別</label>
+      <select id="bet-basic-type" ng-model="vm.oSelectType" ng-options="oType as oType.name for oType in vm.oaType" ng-change="vm.changeType()" class="ng-valid ng-not-empty ng-dirty ng-valid-parse ng-touched" aria-invalid="false" style=""><option label="単勝" value="object:884" selected="selected">単勝</option><option label="複勝" value="object:885">複勝</option><option label="枠連" value="object:886">枠連</option><option label="馬連" value="object:887">馬連</option><option label="ワイド" value="object:888">ワイド</option><option label="馬単" value="object:889">馬単</option><option label="３連複" value="object:890">３連複</option><option label="３連単" value="object:891">３連単</option></select>
+      <!-- ngIf: vm.visibleMethod() --><label for="bet-basic-method" class="text ng-scope" ng-if="vm.visibleMethod()" style="">方式</label><!-- end ngIf: vm.visibleMethod() -->
+      <!-- ngIf: vm.visibleMethod() --><select id="bet-basic-method" ng-model="vm.oSelectMethod" ng-options="oMethod as oMethod.CC_NAME for oMethod in vm.oaMethod" ng-change="vm.changeMethod()" ng-if="vm.visibleMethod()" class="ng-valid ng-scope ng-not-empty ng-dirty ng-valid-parse ng-touched" aria-invalid="false" style=""><option label="通常" value="object:1258" selected="selected">通常</option><option label="ながし" value="object:1259">ながし</option><option label="ボックス" value="object:1260">ボックス</option><option label="フォーメーション" value="object:1261">フォーメーション</option></select><!-- end ngIf: vm.visibleMethod() -->
+      <label ng-show="vm.oSelectMethod.CB_SHOW_MULTI" aria-hidden="true" class="ng-hide">
+        <input type="checkbox" ng-change="vm.changeMulti()" ng-model="vm.bMulti" class="ng-pristine ng-untouched ng-valid ng-empty" aria-invalid="false"><span class="check"></span>
+        マルチ
+      </label>
+    </div>
+
+    <h2 class="page-header block-m-b">
+      投票内容を入力してください。
+      <!-- ngIf: vm.oSelectType.id !== '3' --><button class="btn-help block-mlxs ng-scope" title="ヘルプ" ng-if="vm.oSelectType.id !== '3'" role="button" tabindex="0"></button><!-- end ngIf: vm.oSelectType.id !== '3' -->
+      <!-- ngIf: vm.oSelectType.id === '3' -->
+    </h2>
+
+    <div class="ipat-vote-basic-detail">
+      <div class="ipat-vote-table block block-m-b">
+        <!-- ngIf: vm.isChanging -->
+        <div ng-switch="vm.oSelectType.id">
+          <!-- ngSwitchWhen: 1 -->
+          <!-- ngSwitchWhen: 2 -->
+
+          <!-- ngSwitchWhen: 3 -->
+          <!-- ngSwitchWhen: 4 --><span ng-switch-when="4" class="ng-scope" style="">
+            <div ng-switch="vm.oSelectMethod.CC_ID">
+              <!-- ngSwitchWhen: 7 -->
+              <!-- ngSwitchWhen: 8 -->
+              <!-- ngSwitchWhen: 9 --><span ng-switch-when="9" class="ng-scope" style=""><bet-basic-quinella-box o-horse-no-select-info="vm.oSelectHorseNo" oa-racecard-info="vm.oaRacecard" select-horse="vm.selectHorse()" b-all-race-flag="vm.bAllRaceFlag" o-all-check-horse="vm.oAllCheckHorse" class="ng-isolate-scope"><table class="table table-striped table-ipat block-m-bs">
+  <thead>
+  <tr>
+    <th scope="col">馬番</th>
+    <th scope="col" class="text-center">
+      選択<br>
+      <button class="btn btn-default btn-xs" ng-click="vm.selectAllHorse()" ng-class="{'on-small': vm.oAllCheckHorse.first === true}">全選択</button>
+    </th>
+    <th scope="col" class="racer-name">馬名</th>
+    <!-- ngIf: !vm.bAllRaceFlag --><th scope="col" class="text-left ng-scope" ng-if="!vm.bAllRaceFlag">騎手名</th><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><th scope="col" class="text-right racer-odds ng-scope" ng-if="!vm.bAllRaceFlag">単勝オッズ</th><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr>
+  </thead>
+  <tbody>
+  <!-- ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="1" n-horse-no="1" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-1" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">1</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no1">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer1" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no1" value="1" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">キタノローズ　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">国分優作</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">70.9</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="2" n-horse-no="2" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-2" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">2</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no2">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer2" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no2" value="2" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">ナムラステラ　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">▲川端海翼</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">73.5</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="3" n-horse-no="3" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-3" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">3</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no3">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer3" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no3" value="3" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">ヤマトチャージ　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">佐々木大輔</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">29.6</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="4" n-horse-no="4" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-4" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">4</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no4">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer4" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no4" value="4" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">ココソラーレ　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">▲大久保友雅</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">68.1</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="4" n-horse-no="5" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-4" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">5</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no5">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer5" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no5" value="5" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">レガリアーナ　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">酒井学</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">35.1</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="5" n-horse-no="6" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-5" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">6</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no6">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer6" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no6" value="6" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">ダイメイプリンス　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">田口貫太</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">18.0</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="5" n-horse-no="7" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-5" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">7</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no7">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer7" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no7" value="7" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">メイショウテンジン</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">丹内祐次</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding red odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">3.5</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="6" n-horse-no="8" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-6" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">8</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no8">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer8" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-valid ng-dirty ng-touched ng-empty" id="no8" value="8" aria-invalid="false" style="">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">キャッチアシーフ　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">岩田望来</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding red odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">5.6</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="6" n-horse-no="9" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-6" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">9</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no9">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer9" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no9" value="9" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">マリーイメル　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">△鷲頭虎太</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding blue odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">65.2</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="7" n-horse-no="10" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-7" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">10</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no10">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer10" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no10" value="10" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">ヴォンドゥ　　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">▲森田誠也</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding red odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">7.7</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="7" n-horse-no="11" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-7" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">11</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no11">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer11" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-pristine ng-untouched ng-valid ng-empty" id="no11" value="11" aria-invalid="false">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">デルマアソ　　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">岩部純二</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding black odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">199.9</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="8" n-horse-no="12" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-8" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">12</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no12">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer12" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-valid ng-dirty ng-touched ng-empty" id="no12" value="12" aria-invalid="false" style="">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">アドフランマム　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">松山弘平</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding red odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">3.9</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo --><tr ng-repeat="racer in vm.oaRacecardInfo" ng-class="{disabled: vm.isCancelOdds(racer.winOdds)}" class="ng-scope">
+    <td class="racer-no" scope="row">
+      <racer-no n-stall-no="8" n-horse-no="13" class="ng-isolate-scope"><span class="ipat-racer-no ng-binding stall-color-8" ng-bind="vm.nHorseNo" ng-class="'stall-color-' + vm.nStallNo">13</span>
+</racer-no>
+    </td>
+    <td class="racer-first text-center">
+      <label ng-attr-for="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" for="no13">
+        <input type="checkbox" ng-attr-id="no{{racer.horseNum + vm.CC_SUFFIX_RETRY}}" name="racer13" ng-model="vm.oHorseNoSelectInfo.horse1[racer.horseNum]" ng-value="racer.horseNum" ng-true-value="true" ng-false-value="false" ng-change="vm.selectFirstHorse()" ng-disabled="vm.isCancelOdds(racer.winOdds)" class="ng-valid ng-dirty ng-touched ng-empty" id="no13" value="13" aria-invalid="false" style="">
+        <span class="check" ng-disabled="vm.isCancelOdds(racer.winOdds)" aria-disabled="false"></span>
+      </label>
+    </td>
+    <td ng-class="{'racer-name-all-race': vm.bAllRaceFlag, 'racer-name': !vm.bAllRaceFlag}" class="ng-binding racer-name">マクアケ　　　　　</td>
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="jockey-name ng-binding ng-scope" ng-if="!vm.bAllRaceFlag">鮫島克駿</td><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- ngIf: !vm.bAllRaceFlag --><td class="racer-odds text-right ng-scope" ng-if="!vm.bAllRaceFlag">
+      <odds-num odds="racer.winOdds" type="vm.CO_TYPE.WIN.CC_ID" class="ng-isolate-scope"><!-- ngIf: ::vm.oddsString || undefined --><span ng-if="::vm.oddsString || undefined" class="ng-scope">
+  <span class="block-inline ng-binding red odds-num" ng-class="[vm.getColorClass(), {'odds-num' :vm.oddsString !== vm.CC_INVALID_ODDS, 'odds-cancel' :vm.oddsString === vm.CC_CANCEL_HORSE}]">4.3</span>
+  <!-- ngIf: vm.highOdds !== undefined && vm.highOdds !== null -->
+  <!-- ngIf: (vm.highOdds !== undefined && vm.highOdds !== null) -->
+</span><!-- end ngIf: ::vm.oddsString || undefined -->
+</odds-num>
+    </td><!-- end ngIf: !vm.bAllRaceFlag -->
+  </tr><!-- end ngRepeat: racer in vm.oaRacecardInfo -->
+  </tbody>
+</table>
+</bet-basic-quinella-box></span><!-- end ngSwitchWhen: -->
+              <!-- ngSwitchWhen: 10 -->
+              <!-- ngSwitchDefault: -->
+            </div>
+          </span><!-- end ngSwitchWhen: -->
+          <!-- ngSwitchWhen: 5 -->
+          <!-- ngSwitchWhen: 6 -->
+          <!-- ngSwitchWhen: 7 -->
+          <!-- ngSwitchWhen: 8 -->
+          <!-- ngSwitchDefault: -->
+        </div>
+        <odds-getter c-time="vm.cOddsTime" on-click="vm.refreshOdds()" b-all-race-flag="vm.bAllRaceFlag" class="ng-isolate-scope"><div class="odds-info block block-m-bs text-right">
+  <!-- ngIf: vm.hasTime() && !vm.bAllRaceFlag --><span ng-if="vm.hasTime() &amp;&amp; !vm.bAllRaceFlag" class="text ng-scope"><time class="ng-binding">10:51</time> 現在オッズ</span><!-- end ngIf: vm.hasTime() && !vm.bAllRaceFlag -->
+  <button class="btn btn-default btn-lg ng-binding" ng-click="vm.clickRefresh()" ng-disabled="vm.bAllRaceFlag || vm.bDisabled">オッズ更新</button>
+</div>
+</odds-getter>
+      </div><!-- /.ipat-vote-table -->
+
+      <select-list c-type="1" c-type-id="4" n-unit="vm.cBetMoney" get-bet-list-data="vm.getBetListData()" n-total-num="vm.nSelectTotal" oa-match-list="vm.oaMatchList" get-combi-list="vm.getCombiList()" clear-selected="vm.clearSelectedHorseNo()" b-all-race-flag="vm.bAllRaceFlag" c-method_id="vm.oSelectMethod.CC_METHOD_ID" class="ng-isolate-scope"><div class="ipat-vote-select-list block box-group type-1" ng-class="'type-' + vm.cType">
+  <div class="selection-content ng-isolate-scope" affix="" offset-top="80" offset-reset="vm.bOffsetReset">
+    <div class="selection-title block gutter">
+      <span class="text">選択中の投票内容</span>
+      <!-- 通常投票 -->
+      <!-- ngIf: vm.cType === '1' && !vm.bAllRaceFlag --><button ng-if="vm.cType === '1' &amp;&amp; !vm.bAllRaceFlag" class="block-inline btn-help block-m-lxs ng-scope" title="ヘルプ" role="button" tabindex="0"></button><!-- end ngIf: vm.cType === '1' && !vm.bAllRaceFlag -->
+      <!-- 通常投票 / 全レース -->
+      <!-- ngIf: vm.cType === '1' && vm.bAllRaceFlag -->
+      <!-- オッズ投票・予想印投票 -->
+      <!-- ngIf: vm.cType === '2' || vm.cType === '4' -->
+      <!-- マークカード投票 -->
+      <!-- ngIf: vm.cType === vm.CC_CARD_CCID && vm.cBetFlag !== '25' -->
+      <!-- マークカード投票 クイックピック -->
+      <!-- ngIf: vm.cType === vm.CC_CARD_CCID && vm.cBetFlag === '25' -->
+      <!-- パック投票 -->
+      <!-- ngIf: vm.cType === '5' -->
+      <!-- 投票内容修正 -->
+      <!-- ngIf: vm.cType === '6' -->
+    </div>
+    <!-- ngIf: !vm.bAllRaceFlag --><div class="selection-match block gutter ng-scope" ng-if="!vm.bAllRaceFlag">
+      <!-- タブレット時ヘルプボタン -->
+      <div class="block-inline block-m-rxs hidden-md hidden-lg">
+        <!-- 通常投票 -->
+        <!-- ngIf: vm.cType === '1' && !vm.bAllRaceFlag --><button ng-if="vm.cType === '1' &amp;&amp; !vm.bAllRaceFlag" class="block-inline btn-help block-m-lxs ng-scope" title="ヘルプ" role="button" tabindex="0"></button><!-- end ngIf: vm.cType === '1' && !vm.bAllRaceFlag -->
+        <!-- オッズ投票・予想印投票 -->
+        <!-- ngIf: vm.cType === '2' || vm.cType === '4' -->
+        <!-- マークカード投票 -->
+        <!-- ngIf: vm.cType === vm.CC_CARD_CCID && vm.cBetFlag !== '25' -->
+        <!-- マークカード投票 クイックピック -->
+        <!-- ngIf: vm.cType === vm.CC_CARD_CCID && vm.cBetFlag === '25' -->
+        <!-- パック投票 -->
+        <!-- ngIf: vm.cType === '5' -->
+        <!-- 投票内容修正 -->
+        <!-- ngIf: vm.cType === '6' -->
+      </div>
+
+      <span class="text ng-binding"><strong ng-bind="vm.nTotalNum" class="ng-binding">0</strong>組</span>
+
+      <!-- ngIf: vm.oaMatchList --><button class="btn btn-match ng-scope" ng-click="vm.onHorseCombiConfirm()" ng-if="vm.oaMatchList" ng-disabled="vm.nTotalNum === 0 || vm.isRaceUnselected()" disabled="disabled">組合せ確認</button><!-- end ngIf: vm.oaMatchList -->
+    </div><!-- end ngIf: !vm.bAllRaceFlag -->
+    <!-- 通常投票 / 全レース ヘルプボタン タブレット時 -->
+    <!-- ngIf: vm.bAllRaceFlag -->
+    <div class="pull-sm-right">
+      <div class="selection-amount block gutter">
+        <span class="text">金額</span>
+        <input type="text" maxlength="4" class="form-control text-right ng-valid ng-isolate-scope ng-valid-maxlength ng-not-empty ng-dirty ng-valid-parse ng-touched" ng-model="vm.nUnit" model-pattern="^\d{0,4}$" ng-disabled="vm.isRaceUnselected()" ng-blur="vm.checkAmount()" aria-labelledby="select-list-amount-unit" aria-invalid="false" style="">
+        <span id="select-list-amount-unit" class="text">00円</span>
+        <ten-key value="vm.nUnit" disable="vm.isRaceUnselected()" position="middle" class="ng-isolate-scope"><div class="nowrap ipat-ten-key block-inline">
+  <button class="btn btn-default btn-sm hidden-sm" ng-click="vm.open()" ng-disabled="vm.disable">
+    <!-- ngIf: !vm.disable --><img ng-if="!vm.disable" src="tmpl/images/bet/icon-calculator.gif" width="20" alt="金額セット用テンキ―" class="ng-scope"><!-- end ngIf: !vm.disable -->
+    <!-- ngIf: vm.disable -->
+  </button>
+  <!-- ngIf: vm.show -->
+</div>
+</ten-key>
+      </div>
+
+      <div class="selection-count block gutter">
+        <span class="text">口数</span>
+        <input type="text" maxlength="4" class="form-control text-right ng-pristine ng-untouched ng-valid ng-isolate-scope ng-valid-maxlength ng-not-empty" ng-model="vm.nUnit" model-pattern="^\d{0,4}$" ng-disabled="vm.isRaceUnselected()" ng-blur="vm.checkAmount()" aria-invalid="false" style="">
+        <span class="text">口</span>
+        <ten-key value="vm.nUnit" disable="vm.isRaceUnselected()" position="middle" class="ng-isolate-scope"><div class="nowrap ipat-ten-key block-inline">
+  <button class="btn btn-default btn-sm hidden-sm" ng-click="vm.open()" ng-disabled="vm.disable">
+    <!-- ngIf: !vm.disable --><img ng-if="!vm.disable" src="tmpl/images/bet/icon-calculator.gif" width="20" alt="金額セット用テンキ―" class="ng-scope"><!-- end ngIf: !vm.disable -->
+    <!-- ngIf: vm.disable -->
+  </button>
+  <!-- ngIf: vm.show -->
+</div>
+</ten-key>
+      </div>
+
+      <!-- ngIf: vm.toNumberFromChar(vm.nUnit) <= 1000000 --><div class="selection-amount-label block gutter ng-scope" ng-if="vm.toNumberFromChar(vm.nUnit) &lt;= 1000000">
+        <span class="text">合計金額：</span>
+        <span class="pull-right text"><strong ng-bind="vm.nUnit || 0 | number" class="ng-binding">10</strong>円</span>
+      </div><!-- end ngIf: vm.toNumberFromChar(vm.nUnit) <= 1000000 -->
+      <!-- ngIf: vm.toNumberFromChar(vm.nUnit) > 1000000 -->
+
+      <div class="selection-buttons block gutter">
+        <!-- ngIf: vm.bBetBasic && !vm.bAllRaceFlag --><button ng-if="vm.bBetBasic &amp;&amp; !vm.bAllRaceFlag" class="btn btn-lg btn-set btn-primary ng-scope" ng-click="vm.onOpenSet()" ng-disabled="vm.nTotalNum === 0 || vm.toNumberFromChar(vm.nUnit) &gt; 1000000 || vm.bOpenSetLoading || vm.isNormalMethod() || vm.isRaceUnselected()" disabled="disabled">
+          <!-- ngIf: vm.bOpenSetLoading -->
+          展開セット
+        </button><!-- end ngIf: vm.bBetBasic && !vm.bAllRaceFlag -->
+        <button class="btn btn-lg btn-set btn-primary" ng-click="vm.onSet()" ng-disabled="vm.nTotalNum === 0 || vm.toNumberFromChar(vm.nUnit) &gt; 1000000 || vm.bLoading || vm.isRaceUnselected()" disabled="disabled">
+          <!-- ngIf: vm.bLoading -->
+          セット
+        </button>
+        <button class="btn btn-lg btn-default" ng-click="vm.onShowBetList()">入力終了</button>
+      </div>
+      <div class="selection-buttons selection-buttons-edit block gutter">
+        <button class="btn btn-lg btn-set btn-primary" ng-click="vm.onSave()" ng-disabled="vm.nTotalNum === 0 || vm.isRaceUnselected()" disabled="disabled">修正</button>
+        <button class="btn btn-lg btn-default" ng-click="vm.onCancel()">修正キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /.ipat-vote-select-list -->
+<horse-combi-modal n-total-num="vm.nTotalNum" oa-data="vm.oaMatchList" b-horse-combi-visible="vm.bVisibleList" c-bet-type="vm.cBetType" class="ng-isolate-scope"><div id="foreground" class="horse-combi-modal block box-group ng-hide animate ng-isolate-scope" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+    <div class="selection-list">
+        <div class="overlay animate fade ng-hide" ng-show="vm.bHorseCombiVisible" aria-hidden="true"></div>
+        <div class="dialog animate zoom ng-isolate-scope ng-hide" ng-show="vm.bHorseCombiVisible" tab-focus="vm.bHorseCombiVisible" aria-hidden="true">
+            <div class="dialog-header gutter text-lg clearfix">
+                <div class="pull-left" ng-class="{basic: vm.cBetFlag === vm.CO_BET_FLAG.CC_BASIC, intl: vm.cBetFlag === vm.CO_BET_FLAG.CC_INTL}">
+                    <h1>組合せ確認</h1>
+                    <span class="text ng-binding"></span>
+                    <span class="text ng-binding"></span><!-- 空白類文字対策のため、改行をコメントアウト
+                    --><!-- ngIf: vm.isMulti(vm.oaDisplayHorseCombi) -->
+                    <strong class="ng-binding">0</strong><span class="ng-binding">組</span>
+                </div>
+                <button class="btn btn-default btn-lg pull-right" ng-click="vm.bHorseCombiVisible=false;">閉じる</button>
+            </div>
+
+            <!-- ngIf: vm.bScrollArea -->
+        </div>
+    </div>
+</div>
+</horse-combi-modal>
+</select-list>
+    </div>
+  </div><!-- end ngIf: vm.oCourseRaceType.bPullDown -->
+
+</main>
+</ui-view>
+</div>
+<bet-retry class="ng-scope ng-isolate-scope"><!-- ngIf: vm.bVisibleBetRetryArea -->
+</bet-retry>
+<footer class="footer ipat-vote-footer ng-scope">
+  <div class="copy text-center">Copyright © Japan Racing Association.</div>
+</footer>
+</ui-view>
+    </div>
+
+    <!-- ngIf: isLoading -->
+
+    <ipat-ticket class="ng-isolate-scope"><div class="ipat-ticket noprint ng-isolate-scope ng-hide" ng-show="vm.bVisible" tab-focus="vm.bVisible" aria-hidden="true">
+  <div class="dialog" role="dialog">
+    <div class="dialog-body block gutter">
+      <div class="dialog-body-contents block box gutter text-center" oncontextmenu="return false;">
+
+        <!-- 馬券SVG画像 -->
+        <!-- ngIf: vm.bVisible -->
+        <!--  -->
+
+        <!-- 取消馬番 -->
+        <!-- ngIf: vm.bVisible && (vm.oNb.cancelNums.length > 0 || vm.oNb.cancelFlatmates.length > 0) -->
+      </div>
+    </div>
+    <div class="dialog-footer gutter text-right">
+      <button class="btn btn-default btn-lg pull-left" ng-click="vm.clickPrint();">印刷する</button>
+      <button class="btn btn-default btn-lg btn-ok" ng-click="vm.dismiss()">閉じる</button>
+    </div>
+  </div>
+</div>
+</ipat-ticket>
+    <error-window class="ng-isolate-scope"><div class="ipat-error-window animate fade ng-hide" ng-show="vm.bVisible" aria-hidden="true" style="">
+  <div class="dialog animate zoom ng-isolate-scope ng-hide" ng-show="vm.bVisible" role="dialog" tab-focus="vm.bVisible" aria-hidden="true" style="">
+    <div class="dialog-header gutter sr-only">
+      <h1 class="ng-binding">ご確認</h1>
+    </div>
+    <div class="dialog-body block gutter">
+      <div class="dialog-body-contents block box gutter ng-binding" ng-bind-html="vm.cBody">投票内容と金額を送信してもよろしいですか？<br>投票成立後は取消・変更は出来ません。<br>※ 加入者番号、暗証番号及びＰ－ＡＲＳ番号も併せて送信します。</div>
+    </div>
+    <div class="dialog-footer gutter text-right">
+      <button class="btn btn-default btn-lg btn-ok ng-binding" ng-click="vm.dismiss()">OK</button>
+      <!-- ngIf: vm.nType === 2 --><button class="btn btn-default btn-lg btn-cancel ng-binding ng-scope" ng-if="vm.nType === 2" ng-click="vm.cancel()" style="">キャンセル</button><!-- end ngIf: vm.nType === 2 -->
+    </div>
+  </div>
+</div>
+</error-window>
+    <!-- ngIf: oOperation.isStop() -->
+
+    <div id="noscript" style="color: red; z-index: 5000; position: fixed; display: none;">
+      JRA ネット投票ではJavaScriptを使用しています。
+      <br>JavaScriptに対応したブラウザをご利用いただくか、JavaScriptを使用するように設定してからご利用願います。
+    </div>
+    <script type="text/javascript">
+      document.getElementById('noscript').style.display="none";
+    </script>
+    <script type="text/javascript">
+      const CC_URI_NAR = 'https://n.ipat.jra.go.jp/2019/';
+      const CC_URI_NPPIN_1 = 'https://un.sp.jra.go.jp/jraaccount';
+      const CC_URI_NPPIN_2 = 'https://un.sp.jra.go.jp/jraaccount';
+      const CC_URI_NPPIN_3 = CC_URI_NPPIN_1;
+      const CC_URI_NPPIN_4 = CC_URI_NPPIN_2;
+      const CC_URL_INFO = 'https://jra.jp/JRADB/accessP.html';
+      const CC_URL_CLUBJRANET = 'https://www.clubjranet.jra.go.jp/clubjranet_pc/servlet/PILogin';
+      const CC_URL_SECTIONDETAILS = 'https://jra.jp/faq/pop04/1_32.html';
+      const CC_URL_MEMBERSETTINGLIMITSITE = 'https://limit.ipat.jra.go.jp/';
+      const CC_URL_MEMBERSETTINGLIMITDETAILS = 'https://jra.jp/company/social/disorder/izon6.html';
+      const CC_URL_BETREFERSITE = 'https://www.nvinq.jra.go.jp/jra/servlet/JRAWeb320';
+      const CC_URL_SPAT_SECTIONDETAILS = 'https://jra.jp/dento/member/soku/setsu.html';
+    </script>
+    <script src="tmpl/vendor_260206.js"></script>
+
+        <script src="tmpl/scripts_260206.js"></script>
+
+
+</body></html>
